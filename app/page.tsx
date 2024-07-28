@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import axios from 'axios';
-import { Paper } from '../types';
+import { Paper } from './types';
 
 interface Paper {
   id: string;
