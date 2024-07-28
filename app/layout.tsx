@@ -17,9 +17,9 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className={`${inter.className} bg-gradient-to-b from-gray-900 to-black text-white min-h-screen`}>
-        <main className="container mx-auto px-4 py-8">
+        <div className="container mx-auto px-4 py-8">
           {children}
-        </main>
+        </div>
       </body>
     </html>
   );

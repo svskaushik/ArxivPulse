@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import axios from 'axios';
+import { Paper } from '../types';
 
 interface Paper {
   id: string;
@@ -67,7 +68,7 @@ export default function Home() {
       </div>
       <div className="w-full md:w-2/3 mt-4 md:mt-0">
         {selectedPaper ? (
-          <div className="card">
+          <article className="card">
             <h2 className="text-2xl font-bold mb-2">{selectedPaper.title}</h2>
             <p className="mb-2">Authors: {selectedPaper.authors.join(', ')}</p>
             <a href={selectedPaper.link} target="_blank" rel="noopener noreferrer" className="text-blue-400 hover:underline mb-4 inline-block">
@@ -79,7 +80,7 @@ export default function Home() {
             ) : (
               <p>Generating summary...</p>
             )}
-          </div>
+          </article>
         ) : (
           <p>Select a paper to view its summary</p>
         )}
