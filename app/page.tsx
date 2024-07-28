@@ -47,7 +47,7 @@ export default function Home() {
   };
 
   const getCitation = (paper: Paper) => {
-    const authors = paper.authors.join(', ');
+    const authors = paper.authors.map(author => author.name).join(', ');
     const year = new Date(paper.published).getFullYear();
     return `${authors} (${year}). ${paper.title}. arXiv preprint arXiv:${paper.id.split('/').pop()}`;
   };
@@ -76,13 +76,31 @@ export default function Home() {
         {selectedPaper ? (
           <article className="card bg-gray-800 rounded-lg shadow-lg p-6">
             <h2 className="text-2xl font-bold mb-2">{selectedPaper.title}</h2>
-            <p className="mb-2 text-gray-300">Authors: {selectedPaper.authors.join(', ')}</p>
+            <p className="mb-2 text-gray-300">
+              Authors: {selectedPaper.authors.map((author, index) => (
+                <span key={index}>
+                  <a href={author.profileUrl} target="_blank" rel="noopener noreferrer" className="text-blue-400 hover:underline">
+                    {author.name}
+                  </a>
+                  {index < selectedPaper.authors.length - 1 ? ', ' : ''}
+                </span>
+              ))}
+            </p>
             <p className="mb-2 text-gray-300">Published: {formatDate(selectedPaper.published)}</p>
             <p className="mb-2 text-gray-300">Last Updated: {formatDate(selectedPaper.updated)}</p>
             <p className="mb-2 text-gray-300">Categories: {selectedPaper.categories.join(', ')}</p>
-            <a href={selectedPaper.link} target="_blank" rel="noopener noreferrer" className="text-blue-400 hover:underline mb-4 inline-block transition-colors duration-200">
-              View on arXiv
-            </a>
+            <div className="mb-4">
+              <a href={selectedPaper.link} target="_blank" rel="noopener noreferrer" className="text-blue-400 hover:underline mr-4 transition-colors duration-200">
+                View on arXiv
+              </a>
+              <a href={selectedPaper.pdfLink} target="_blank" rel="noopener noreferrer" className="text-blue-400 hover:underline transition-colors duration-200">
+                Download PDF
+              </a>
+            </div>
+            <div className="mb-4">
+              <span className="mr-4">Citations: {selectedPaper.citationCount}</span>
+              <span>Altmetric: {selectedPaper.altmetric}</span>
+            </div>
             <h3 className="text-xl font-semibold mb-2 mt-4">Abstract</h3>
             <p className="text-gray-300 mb-4">{selectedPaper.abstract}</p>
             <h3 className="text-xl font-semibold mb-2">Summary</h3>
@@ -92,7 +110,17 @@ export default function Home() {
               <p className="text-gray-400 mb-4">Generating summary...</p>
             )}
             <h3 className="text-xl font-semibold mb-2">Citation</h3>
-            <p className="text-gray-300">{getCitation(selectedPaper)}</p>
+            <p className="text-gray-300 mb-4">{getCitation(selectedPaper)}</p>
+            <h3 className="text-xl font-semibold mb-2">Related Papers</h3>
+            <ul className="list-disc list-inside">
+              {selectedPaper.relatedPapers.map((paper, index) => (
+                <li key={index} className="text-gray-300">
+                  <a href={paper.link} target="_blank" rel="noopener noreferrer" className="text-blue-400 hover:underline">
+                    {paper.title}
+                  </a>
+                </li>
+              ))}
+            </ul>
           </article>
         ) : (
           <p className="text-gray-400">Select a paper to view its details</p>
