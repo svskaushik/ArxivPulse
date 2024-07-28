@@ -15,8 +15,12 @@ export default function Home() {
 
   const fetchPapers = async () => {
     try {
-      const response = await axios.get<Paper[]>('/api/fetch-papers');
-      setPapers(response.data);
+      const response = await fetch('/api/fetch-papers');
+      if (!response.ok) {
+        throw new Error('Network response was not ok');
+      }
+      const data = await response.json();
+      setPapers(data);
       setLoading(false);
     } catch (error) {
       console.error('Error fetching papers:', error);
