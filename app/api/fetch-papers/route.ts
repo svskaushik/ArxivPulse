@@ -28,20 +28,49 @@ async function fetchRelatedPapers(paperId: string): Promise<Paper[]> {
   });
 }
 
-export async function GET() {
+async function fetchMetrics(arxivId: string, doi: string | null) {
   try {
-    const response = await axios.get('http://export.arxiv.org/api/query?search_query=cat:cs.AI&sortBy=lastUpdatedDate&sortOrder=descending&max_results=25');
+    const response = await fetch(`/api/fetch-metrics?arxivId=${arxivId}&doi=${doi}`);
+    if (!response.ok) {
+      console.error('Failed to fetch metrics');
+      return { citationCount: 0, altmetric: 0 };
+    }
+    return response.json();
+  } catch (error) {
+    console.error('Error fetching metrics:', error);
+    return { citationCount: 0, altmetric: 0 };
+  }
+}
+
+export async function GET(request: Request) {
+  const { searchParams } = new URL(request.url);
+  const searchTerm = searchParams.get('search') || '';
+  const startDate = searchParams.get('startDate') || '';
+  const endDate = searchParams.get('endDate') || '';
+  const category = searchParams.get('category') || 'cs.AI';
+
+  try {
+    let query = `search_query=${category}`;
+    if (searchTerm) {
+      query += `+AND+all:${searchTerm}`;
+    }
+    if (startDate) {
+      query += `+AND+submittedDate:[${startDate}+TO+${endDate || '*'}]`;
+    }
+
+    const response = await axios.get(`http://export.arxiv.org/api/query?${query}&sortBy=lastUpdatedDate&sortOrder=descending&max_results=25`);
     const xmlData = response.data;
 
-    const papers: Paper[] = await new Promise((resolve, reject) => {
+    return new Promise((resolve, reject) => {
       parseString(xmlData, async (err, result) => {
         if (err) {
           reject(new Error('Error parsing XML'));
         }
 
-        const papersPromises = result.feed.entry.map(async (entry: any) => {
+        const papers = await Promise.all(result.feed.entry.map(async (entry: any) => {
           const paperId = entry.id[0].split('/').pop();
-          const relatedPapers = await fetchRelatedPapers(paperId);
+          const doi = entry['arxiv:doi'] ? entry['arxiv:doi'][0] : null;
+          const metrics = await fetchMetrics(paperId, doi);
 
           return {
             id: entry.id[0],
@@ -57,19 +86,16 @@ export async function GET() {
             categories: entry.category.map((cat: any) => cat.$.term),
             published: entry.published[0],
             updated: entry.updated[0],
-            doi: entry['arxiv:doi'] ? entry['arxiv:doi'][0] : null,
-            relatedPapers,
-            citationCount: 0,
-            altmetric: 0,
+            doi: doi,
+            relatedPapers: [],
+            citationCount: metrics.citationCount,
+            altmetric: metrics.altmetric,
           };
-        });
+        }));
 
-        const papers = await Promise.all(papersPromises);
-        resolve(papers);
+        resolve(NextResponse.json(papers));
       });
     });
-
-    return NextResponse.json(papers);
   } catch (error) {
     console.error('Error fetching papers:', error);
     return NextResponse.json({ error: 'Error fetching papers' }, { status: 500 });

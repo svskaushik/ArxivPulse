@@ -13,9 +13,27 @@ export interface Paper {
   relatedPapers: Paper[];
   citationCount: number;
   altmetric: number;
+  userRating?: number;
+  comments?: Comment[];
+  inReadingList: boolean;
+}
+
+export interface Comment {
+  id: string;
+  userId: string;
+  text: string;
+  createdAt: string;
 }
 
 export interface Author {
   name: string;
   profileUrl: string;
+}
+
+export enum CitationFormat {
+  APA = 'APA',
+  MLA = 'MLA',
+  Chicago = 'Chicago',
+  Harvard = 'Harvard',
+  IEEE = 'IEEE'
 }
