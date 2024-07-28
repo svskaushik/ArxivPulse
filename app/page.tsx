@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { Paper } from './types';
 
@@ -15,7 +15,7 @@ export default function Home() {
 
   const fetchPapers = async () => {
     try {
-      const response = await axios.get('/api/fetch-papers');
+      const response = await axios.get<Paper[]>('/api/fetch-papers');
       setPapers(response.data);
       setLoading(false);
     } catch (error) {
@@ -28,10 +28,10 @@ export default function Home() {
     setSelectedPaper(paper);
     if (!paper.summary) {
       try {
-        const response = await axios.post('/api/summarize', { text: paper.title });
+        const response = await axios.post<{ summary: string }>('/api/summarize', { text: paper.title });
         const updatedPaper = { ...paper, summary: response.data.summary };
         setSelectedPaper(updatedPaper);
-        setPapers(papers.map(p => p.id === paper.id ? updatedPaper : p));
+        setPapers(prevPapers => prevPapers.map(p => p.id === paper.id ? updatedPaper : p));
       } catch (error) {
         console.error('Error generating summary:', error);
       }
