@@ -53,11 +53,11 @@ export default function Home() {
         {loading ? (
           <p>Loading papers...</p>
         ) : (
-          <ul>
+          <ul className="space-y-2">
             {papers.map((paper) => (
               <li
                 key={paper.id}
-                className="cursor-pointer hover:bg-gray-700 p-2 rounded"
+                className="cursor-pointer hover:bg-gray-700 p-2 rounded transition-colors duration-200"
                 onClick={() => handlePaperClick(paper)}
               >
                 {paper.title}
@@ -68,21 +68,21 @@ export default function Home() {
       </div>
       <div className="w-full md:w-2/3 mt-4 md:mt-0">
         {selectedPaper ? (
-          <article className="card">
+          <article className="card bg-gray-800 rounded-lg shadow-lg p-6">
             <h2 className="text-2xl font-bold mb-2">{selectedPaper.title}</h2>
-            <p className="mb-2">Authors: {selectedPaper.authors.join(', ')}</p>
-            <a href={selectedPaper.link} target="_blank" rel="noopener noreferrer" className="text-blue-400 hover:underline mb-4 inline-block">
+            <p className="mb-2 text-gray-300">Authors: {selectedPaper.authors.join(', ')}</p>
+            <a href={selectedPaper.link} target="_blank" rel="noopener noreferrer" className="text-blue-400 hover:underline mb-4 inline-block transition-colors duration-200">
               View on arXiv
             </a>
-            <h3 className="text-xl font-semibold mb-2">Summary</h3>
+            <h3 className="text-xl font-semibold mb-2 mt-4">Summary</h3>
             {selectedPaper.summary ? (
-              <p>{selectedPaper.summary}</p>
+              <p className="text-gray-300">{selectedPaper.summary}</p>
             ) : (
-              <p>Generating summary...</p>
+              <p className="text-gray-400">Generating summary...</p>
             )}
           </article>
         ) : (
-          <p>Select a paper to view its summary</p>
+          <p className="text-gray-400">Select a paper to view its summary</p>
         )}
       </div>
     </div>
