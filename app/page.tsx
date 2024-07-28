@@ -4,14 +4,6 @@ import { useState, useEffect } from 'react';
 import axios from 'axios';
 import { Paper } from './types';
 
-interface Paper {
-  id: string;
-  title: string;
-  summary: string;
-  authors: string[];
-  link: string;
-}
-
 export default function Home() {
   const [papers, setPapers] = useState<Paper[]>([]);
   const [selectedPaper, setSelectedPaper] = useState<Paper | null>(null);
@@ -46,6 +38,20 @@ export default function Home() {
     }
   };
 
+  const formatDate = (dateString: string) => {
+    return new Date(dateString).toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric'
+    });
+  };
+
+  const getCitation = (paper: Paper) => {
+    const authors = paper.authors.join(', ');
+    const year = new Date(paper.published).getFullYear();
+    return `${authors} (${year}). ${paper.title}. arXiv preprint arXiv:${paper.id.split('/').pop()}`;
+  };
+
   return (
     <div className="flex flex-col md:flex-row">
       <div className="w-full md:w-1/3 pr-4">
@@ -71,18 +77,25 @@ export default function Home() {
           <article className="card bg-gray-800 rounded-lg shadow-lg p-6">
             <h2 className="text-2xl font-bold mb-2">{selectedPaper.title}</h2>
             <p className="mb-2 text-gray-300">Authors: {selectedPaper.authors.join(', ')}</p>
+            <p className="mb-2 text-gray-300">Published: {formatDate(selectedPaper.published)}</p>
+            <p className="mb-2 text-gray-300">Last Updated: {formatDate(selectedPaper.updated)}</p>
+            <p className="mb-2 text-gray-300">Categories: {selectedPaper.categories.join(', ')}</p>
             <a href={selectedPaper.link} target="_blank" rel="noopener noreferrer" className="text-blue-400 hover:underline mb-4 inline-block transition-colors duration-200">
               View on arXiv
             </a>
-            <h3 className="text-xl font-semibold mb-2 mt-4">Summary</h3>
+            <h3 className="text-xl font-semibold mb-2 mt-4">Abstract</h3>
+            <p className="text-gray-300 mb-4">{selectedPaper.abstract}</p>
+            <h3 className="text-xl font-semibold mb-2">Summary</h3>
             {selectedPaper.summary ? (
-              <p className="text-gray-300">{selectedPaper.summary}</p>
+              <p className="text-gray-300 mb-4">{selectedPaper.summary}</p>
             ) : (
-              <p className="text-gray-400">Generating summary...</p>
+              <p className="text-gray-400 mb-4">Generating summary...</p>
             )}
+            <h3 className="text-xl font-semibold mb-2">Citation</h3>
+            <p className="text-gray-300">{getCitation(selectedPaper)}</p>
           </article>
         ) : (
-          <p className="text-gray-400">Select a paper to view its summary</p>
+          <p className="text-gray-400">Select a paper to view its details</p>
         )}
       </div>
     </div>
