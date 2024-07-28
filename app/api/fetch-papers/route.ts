@@ -19,6 +19,11 @@ export async function GET() {
           authors: entry.author.map((author: any) => author.name[0]),
           link: entry.link.find((link: any) => link.$.rel === 'alternate')?.$.href,
           summary: entry.summary[0],
+          abstract: entry.summary[0],
+          categories: entry.category.map((cat: any) => cat.$.term),
+          published: entry.published[0],
+          updated: entry.updated[0],
+          doi: entry['arxiv:doi'] ? entry['arxiv:doi'][0] : null,
         }));
 
         resolve(NextResponse.json(papers));
