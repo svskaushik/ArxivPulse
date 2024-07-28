@@ -116,15 +116,22 @@ export default function Home() {
             <h3 className="text-xl font-semibold mb-2">Citation</h3>
             <p className="text-gray-300 mb-4">{getCitation(selectedPaper)}</p>
             <h3 className="text-xl font-semibold mb-2">Related Papers</h3>
-            <ul className="list-disc list-inside">
-              {selectedPaper.relatedPapers.map((paper, index) => (
-                <li key={index} className="text-gray-300">
-                  <a href={paper.link} target="_blank" rel="noopener noreferrer" className="text-blue-400 hover:underline">
-                    {paper.title}
-                  </a>
-                </li>
-              ))}
-            </ul>
+            {selectedPaper.relatedPapers.length > 0 ? (
+              <ul className="list-disc list-inside">
+                {selectedPaper.relatedPapers.map((paper, index) => (
+                  <li key={index} className="text-gray-300">
+                    <a href={paper.link} target="_blank" rel="noopener noreferrer" className="text-blue-400 hover:underline">
+                      {paper.title}
+                    </a>
+                    <p className="text-sm text-gray-400">
+                      {paper.authors.map(author => author.name).join(', ')}
+                    </p>
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <p className="text-gray-400">No related papers found.</p>
+            )}
           </article>
         ) : (
           <p className="text-gray-400">Select a paper to view its details</p>
