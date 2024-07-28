@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import { Paper } from './types';
+import { Paper, CitationFormat } from './types';
 
 export default function Home() {
   const [papers, setPapers] = useState<Paper[]>([]);
@@ -50,11 +50,28 @@ export default function Home() {
     });
   };
 
-  const getCitation = (paper: Paper) => {
-    const authors = paper.authors.map(author => author.name).join(', ');
+  const getCitation = (paper: Paper, format: CitationFormat): string => {
+    const authors = paper.authors.map(author => author.name);
     const year = new Date(paper.published).getFullYear();
-    return `${authors} (${year}). ${paper.title}. arXiv preprint arXiv:${paper.id.split('/').pop()}`;
+    const arxivId = paper.id.split('/').pop();
+
+    switch (format) {
+      case CitationFormat.APA:
+        return `${authors.join(', ')}. (${year}). ${paper.title}. arXiv preprint arXiv:${arxivId}.`;
+      case CitationFormat.MLA:
+        return `${authors[0].split(' ').pop()}, ${authors[0].split(' ')[0]}${authors.length > 1 ? ', et al.' : ''}. "${paper.title}." arXiv, ${year}, arXiv:${arxivId}.`;
+      case CitationFormat.Chicago:
+        return `${authors.join(', ')}. "${paper.title}." arXiv preprint arXiv:${arxivId} (${year}).`;
+      case CitationFormat.Harvard:
+        return `${authors.join(', ')}, ${year}. ${paper.title}. arXiv preprint arXiv:${arxivId}.`;
+      case CitationFormat.IEEE:
+        return `${authors.map(author => author.split(' ').pop() + ', ' + author.split(' ')[0][0] + '.').join(', ')}, "${paper.title}," arXiv preprint arXiv:${arxivId}, ${year}.`;
+      default:
+        return `${authors.join(', ')} (${year}). ${paper.title}. arXiv preprint arXiv:${arxivId}.`;
+    }
   };
+
+  const [selectedCitationFormat, setSelectedCitationFormat] = useState<CitationFormat>(CitationFormat.APA);
 
   return (
     <div className="flex flex-col md:flex-row">
@@ -114,7 +131,28 @@ export default function Home() {
               <p className="text-gray-400 mb-4">Generating summary...</p>
             )}
             <h3 className="text-xl font-semibold mb-2">Citation</h3>
-            <p className="text-gray-300 mb-4">{getCitation(selectedPaper)}</p>
+            <div className="mb-2">
+              <label htmlFor="citationFormat" className="mr-2">Citation Format:</label>
+              <select
+                id="citationFormat"
+                value={selectedCitationFormat}
+                onChange={(e) => setSelectedCitationFormat(e.target.value as CitationFormat)}
+                className="bg-gray-700 text-white rounded p-1"
+              >
+                {Object.values(CitationFormat).map((format) => (
+                  <option key={format} value={format}>{format}</option>
+                ))}
+              </select>
+            </div>
+            <div className="bg-gray-700 p-2 rounded mb-4">
+              <p className="text-gray-300">{getCitation(selectedPaper, selectedCitationFormat)}</p>
+              <button
+                onClick={() => navigator.clipboard.writeText(getCitation(selectedPaper, selectedCitationFormat))}
+                className="mt-2 bg-blue-600 text-white px-2 py-1 rounded hover:bg-blue-700 transition-colors"
+              >
+                Copy Citation
+              </button>
+            </div>
             <h3 className="text-xl font-semibold mb-2">Related Papers</h3>
             {selectedPaper.relatedPapers.length > 0 ? (
               <ul className="list-disc list-inside">

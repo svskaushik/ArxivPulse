@@ -19,3 +19,11 @@ export interface Author {
   name: string;
   profileUrl: string;
 }
+
+export enum CitationFormat {
+  APA = 'APA',
+  MLA = 'MLA',
+  Chicago = 'Chicago',
+  Harvard = 'Harvard',
+  IEEE = 'IEEE'
+}
