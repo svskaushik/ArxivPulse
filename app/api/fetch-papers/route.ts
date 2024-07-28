@@ -28,6 +28,14 @@ async function fetchRelatedPapers(paperId: string): Promise<Paper[]> {
   });
 }
 
+async function fetchMetrics(arxivId: string, doi: string | null) {
+  const response = await fetch(`/api/fetch-metrics?arxivId=${arxivId}&doi=${doi}`);
+  if (!response.ok) {
+    throw new Error('Failed to fetch metrics');
+  }
+  return response.json();
+}
+
 export async function GET() {
   try {
     const response = await axios.get('http://export.arxiv.org/api/query?search_query=cat:cs.AI&sortBy=lastUpdatedDate&sortOrder=descending&max_results=25');
@@ -42,6 +50,8 @@ export async function GET() {
         const papersPromises = result.feed.entry.map(async (entry: any) => {
           const paperId = entry.id[0].split('/').pop();
           const relatedPapers = await fetchRelatedPapers(paperId);
+          const doi = entry['arxiv:doi'] ? entry['arxiv:doi'][0] : null;
+          const metrics = await fetchMetrics(paperId, doi);
 
           return {
             id: entry.id[0],
@@ -57,10 +67,10 @@ export async function GET() {
             categories: entry.category.map((cat: any) => cat.$.term),
             published: entry.published[0],
             updated: entry.updated[0],
-            doi: entry['arxiv:doi'] ? entry['arxiv:doi'][0] : null,
+            doi: doi,
             relatedPapers,
-            citationCount: 0,
-            altmetric: 0,
+            citationCount: metrics.citationCount,
+            altmetric: metrics.altmetric,
           };
         });
 
