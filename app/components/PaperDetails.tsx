@@ -1,11 +1,13 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import { FaCode, FaChartBar, FaBook, FaArrowLeft, FaCalendarAlt } from 'react-icons/fa';
+import ReactMarkdown from 'react-markdown';
+import rehypeRaw from 'rehype-raw';
+import { EmbedPDF } from "@simplepdf/react-embed-pdf";
+import { CitationFormat } from '../types';
 import Timeline from './Timeline';
 import SocialShareButtons from './SocialShareButtons';
-import { EmbedPDF } from "@simplepdf/react-embed-pdf";
 import ChatWithPDF from './ChatWithPDF';
-import { CitationFormat } from '../types';
 import ReactMarkdown from 'react-markdown';
 import rehypeRaw from 'rehype-raw';
 import { motion, AnimatePresence } from 'framer-motion';
