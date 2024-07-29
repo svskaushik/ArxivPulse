@@ -135,23 +135,19 @@ export default function Home() {
     }
   };
 
-  const handlePaperClick = async (paper: Paper) => {
+  const handlePaperClick = (paper: Paper) => {
     setSelectedPaper(paper);
     if (!paper.summary) {
-      try {
-        // First, fetch the full PDF text
-        const pdfTextResponse = await axios.get<{ text: string }>(`/api/fetch-pdf-text?url=${encodeURIComponent(paper.pdfLink)}`);
-        const fullPdfText = pdfTextResponse.data.text;
-        console.log('Full PDF text:', typeof(fullPdfText));
-
-        // Then, use the full PDF text for summarization
-        const summaryResponse = await axios.post<{ summary: string }>('/api/summarize', { text: fullPdfText });
-        const updatedPaper = { ...paper, summary: summaryResponse.data.summary };
-        setSelectedPaper(updatedPaper);
-        setPapers(prevPapers => prevPapers.map(p => p.id === paper.id ? updatedPaper : p));
-      } catch (error) {
-        console.error('Error generating summary:', error);
-      }
+      // Generate summary using the abstract instead of full PDF text
+      axios.post<{ summary: string }>('/api/summarize', { text: paper.abstract })
+        .then(response => {
+          const updatedPaper = { ...paper, summary: response.data.summary };
+          setSelectedPaper(updatedPaper);
+          setPapers(prevPapers => prevPapers.map(p => p.id === paper.id ? updatedPaper : p));
+        })
+        .catch(error => {
+          console.error('Error generating summary:', error);
+        });
     }
   };
 

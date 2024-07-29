@@ -5,7 +5,7 @@ import rehypeRaw from 'rehype-raw';
 import { Paper, CitationFormat } from '../types';
 import Timeline from './Timeline';
 import SocialShareButtons from './SocialShareButtons';
-import PdfViewer from './PdfViewer';
+import { EmbedPDF } from "@simplepdf/react-embed-pdf";
 import { FaBook, FaCode, FaChartBar, FaCalendarAlt } from 'react-icons/fa';
 
 interface PaperDetailsProps {
@@ -180,7 +180,17 @@ const PaperDetails: React.FC<PaperDetailsProps> = ({
           <p className="text-gray-400">No related papers found.</p>
         )}
       </div>
-      <PdfViewer pdfUrl={paper.pdfLink} />
+      <div className="mb-4">
+        <h3 className="text-2xl font-semibold mb-2">PDF Viewer</h3>
+        <EmbedPDF>
+          <iframe
+            src={`/api/paper-pdf?url=${encodeURIComponent(paper.pdfLink)}`}
+            width="100%"
+            height="600px"
+            style={{ border: 'none' }}
+          />
+        </EmbedPDF>
+      </div>
     </motion.article>
   );
 };
