@@ -35,6 +35,10 @@ export default function Home() {
     if (node) observer.current.observe(node);
   }, [loading, hasMore]);
 
+  useEffect(() => {
+    fetchPapers();
+  }, [page, searchTerm, filterOptions]);
+
   const handleSearch = (term: string) => {
     setSearchTerm(term);
     setPage(1);
@@ -84,11 +88,8 @@ export default function Home() {
     );
   };
 
-  useEffect(() => {
-    fetchPapers();
-  }, [page, searchTerm, filterOptions]);
-
-  const fetchPapers = async () => {
+  const fetchPapers = useCallback(async () => {
+    if (loading || !hasMore) return;
     try {
       setLoading(true);
       const response = await fetch(`/api/fetch-papers?page=${page}&search=${searchTerm}&startDate=${filterOptions.dateRange.start}&endDate=${filterOptions.dateRange.end}&category=${filterOptions.category}`);
@@ -101,15 +102,15 @@ export default function Home() {
         setHasMore(data.length === PAPERS_PER_PAGE);
       } else {
         console.error('Unexpected data format:', data);
-        setPapers([]);
+        setHasMore(false);
       }
     } catch (error) {
       console.error('Error fetching papers:', error);
-      setPapers([]);
+      setHasMore(false);
     } finally {
       setLoading(false);
     }
-  };
+  }, [page, searchTerm, filterOptions, loading, hasMore]);
 
   const handlePaperClick = async (paper: Paper) => {
     setSelectedPaper(paper);
