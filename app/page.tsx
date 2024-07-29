@@ -21,7 +21,7 @@ export default function Home() {
   const [searchTerm, setSearchTerm] = useState('');
   const [filterOptions, setFilterOptions] = useState({
     dateRange: { start: '', end: '' },
-    category: '',
+    categories: [],
   });
   const [page, setPage] = useState(1);
   const [hasMore, setHasMore] = useState(true);
@@ -194,7 +194,7 @@ export default function Home() {
 
   return (
     <div className="flex flex-col h-screen overflow-hidden">
-      <NavBar onSearch={handleSearch} onFilter={handleFilter} />
+      <NavBar onSearch={handleSearch} onFilter={handleFilter} activeFilters={filterOptions} />
       <div className="flex flex-grow p-4 h-[calc(100vh-64px)]"> {/* Adjust 64px if your NavBar height is different */}
         <AnimatePresence mode="wait">
           {selectedPaper ? (
@@ -216,19 +216,13 @@ export default function Home() {
                 />
                 {loading && <p className="mt-4">Loading more papers...</p>}
               </div>
-              <div className="w-2/3 pl-4 overflow-y-auto h-full relative">
-                <button
-                  onClick={() => setSelectedPaper(null)}
-                  className="absolute top-2 right-2 bg-blue-600 text-white p-2 rounded-full shadow-lg hover:bg-blue-700 transition-colors"
-                  aria-label="Return to list"
-                >
-                  <FaArrowLeft />
-                </button>
+              <div className="w-2/3 pl-4 overflow-y-auto h-full">
                 <PaperDetails
                   paper={selectedPaper}
                   selectedCitationFormat={selectedCitationFormat}
                   onCitationFormatChange={setSelectedCitationFormat}
                   getCitation={getCitation}
+                  onBack={() => setSelectedPaper(null)}
                 />
               </div>
             </motion.div>

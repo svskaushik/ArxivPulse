@@ -13,6 +13,7 @@ interface PaperDetailsProps {
   selectedCitationFormat: CitationFormat;
   onCitationFormatChange: (format: CitationFormat) => void;
   getCitation: (paper: Paper, format: CitationFormat) => string;
+  onBack: () => void;
 }
 
 const PaperDetails: React.FC<PaperDetailsProps> = ({
@@ -20,6 +21,7 @@ const PaperDetails: React.FC<PaperDetailsProps> = ({
   selectedCitationFormat,
   onCitationFormatChange,
   getCitation,
+  onBack,
 }) => {
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString('en-US', {
@@ -49,16 +51,18 @@ const PaperDetails: React.FC<PaperDetailsProps> = ({
       transition={{ duration: 0.3 }}
       className="glass rounded-lg shadow-lg p-6 relative"
     >
-      <button
-        onClick={() => window.history.back()}
-        className="absolute top-4 left-4 glass text-white p-2 rounded-full shadow-lg hover:bg-opacity-20 transition-colors"
-        aria-label="Return to list"
-      >
-        <FaArrowLeft />
-      </button>
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-8">
-        <div>
-          <h2 className="text-3xl font-bold mb-2">{paper.title}</h2>
+      <div className="flex justify-between items-start mb-4">
+        <h2 className="text-3xl font-bold">{paper.title}</h2>
+        <button
+          onClick={onBack}
+          className="glass text-white p-2 rounded-full shadow-lg hover:bg-opacity-20 transition-colors"
+          aria-label="Return to list"
+        >
+          <FaArrowLeft />
+        </button>
+      </div>
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="md:col-span-2">
           <p className="mb-2 text-gray-300 text-lg">
             Authors: {paper.authors.map((author, index) => (
               <span key={index}>
