@@ -33,21 +33,15 @@ export async function POST(request: NextRequest) {
 
     let output: string | undefined;
 
-    // Try to find the output in different possible structures
+    // Extract the output from the new response structure
     if (response.outputs && response.outputs.length > 0) {
-      const flowOutputs = response.outputs[0];
-      if (flowOutputs.outputs && flowOutputs.outputs.length > 0) {
-        const firstComponentOutputs = flowOutputs.outputs[0];
-        if (firstComponentOutputs.outputs && firstComponentOutputs.outputs.message) {
-          output = firstComponentOutputs.outputs.message;
-        } else if (firstComponentOutputs.message) {
-          output = firstComponentOutputs.message;
+      const firstOutput = response.outputs[0];
+      if (firstOutput.outputs && firstOutput.outputs.length > 0) {
+        const textOutput = firstOutput.outputs[0];
+        if (textOutput.outputs && textOutput.outputs.text && textOutput.outputs.text.message) {
+          output = textOutput.outputs.text.message;
         }
-      } else if (flowOutputs.message) {
-        output = flowOutputs.message;
       }
-    } else if (response.message) {
-      output = response.message;
     }
 
     if (!output || typeof output !== 'string') {
