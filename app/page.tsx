@@ -6,6 +6,7 @@ import { Paper, CitationFormat, Comment } from './types';
 import PaperVisualization from './components/PaperVisualization';
 import SocialShareButtons from './components/SocialShareButtons';
 import NavBar from './components/NavBar';
+import PdfViewer from './components/PdfViewer';
 
 const PAPERS_PER_PAGE = 10;
 
@@ -300,14 +301,17 @@ export default function Home() {
                   Add Comment
                 </button>
               </form>
+              <PdfViewer pdfUrl={selectedPaper.pdfLink} />
             </article>
           ) : (
             <p className="text-gray-400">Select a paper to view its details</p>
           )}
+          {/* Paper Visualization (hidden for now)
           <h3 className="text-2xl font-bold mt-8 mb-4">Paper Visualization</h3>
           <div className="bg-gray-800 p-4 rounded-lg">
             <PaperVisualization papers={papers} />
           </div>
+          */}
         </div>
       </div>
     </div>
