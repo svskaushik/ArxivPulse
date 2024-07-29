@@ -31,23 +31,28 @@ export async function POST(request: NextRequest) {
 
     console.log('Full response:', JSON.stringify(response, null, 2));
 
-    if (!response.outputs || response.outputs.length === 0) {
-      throw new Error('No outputs in response');
+    let output: string | undefined;
+
+    // Try to find the output in different possible structures
+    if (response.outputs && response.outputs.length > 0) {
+      const flowOutputs = response.outputs[0];
+      if (flowOutputs.outputs && flowOutputs.outputs.length > 0) {
+        const firstComponentOutputs = flowOutputs.outputs[0];
+        if (firstComponentOutputs.outputs && firstComponentOutputs.outputs.message) {
+          output = firstComponentOutputs.outputs.message;
+        } else if (firstComponentOutputs.message) {
+          output = firstComponentOutputs.message;
+        }
+      } else if (flowOutputs.message) {
+        output = flowOutputs.message;
+      }
+    } else if (response.message) {
+      output = response.message;
     }
 
-    const flowOutputs = response.outputs[0];
-    if (!flowOutputs.outputs || flowOutputs.outputs.length === 0) {
-      throw new Error('No outputs in flowOutputs');
-    }
-
-    const firstComponentOutputs = flowOutputs.outputs[0];
-    if (!firstComponentOutputs.outputs || !firstComponentOutputs.outputs.message) {
-      throw new Error('Invalid structure in firstComponentOutputs');
-    }
-
-    const output = firstComponentOutputs.outputs.message;
-    if (typeof output !== 'string') {
-      throw new Error('Output is not a string');
+    if (!output || typeof output !== 'string') {
+      console.error('Unable to find valid output in response');
+      return NextResponse.json({ error: 'Invalid response structure' }, { status: 500 });
     }
 
     return NextResponse.json({ summary: output });
