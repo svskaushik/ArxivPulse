@@ -14,6 +14,7 @@ const PdfViewer: React.FC<PdfViewerProps> = ({ pdfUrl }) => {
       try {
         const response = await axios.get(`/api/fetch-pdf-text?url=${encodeURIComponent(pdfUrl)}`);
         setPdfText(response.data.text);
+        console.log('PDF text:', response.data.text);
       } catch (error) {
         console.error('Error fetching PDF text:', error);
         setPdfText('Error loading PDF text');

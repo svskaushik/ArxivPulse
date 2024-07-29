@@ -3,6 +3,8 @@ import axios from 'axios';
 import { parseString } from 'xml2js';
 import { Paper } from '../../types';
 
+const PAPERS_PER_PAGE = 10;
+
 async function fetchRelatedPapers(paperId: string): Promise<Paper[]> {
   const response = await axios.get(`http://export.arxiv.org/api/query?id_list=${paperId}&max_results=5`);
   const xmlData = response.data;
@@ -44,6 +46,7 @@ async function fetchMetrics(arxivId: string, doi: string | null) {
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
+  const page = parseInt(searchParams.get('page') || '1', 10);
   const searchTerm = searchParams.get('search') || '';
   const startDate = searchParams.get('startDate') || '';
   const endDate = searchParams.get('endDate') || '';
@@ -58,7 +61,8 @@ export async function GET(request: Request) {
       query += `+AND+submittedDate:[${startDate}+TO+${endDate || '*'}]`;
     }
 
-    const response = await axios.get(`http://export.arxiv.org/api/query?${query}&sortBy=lastUpdatedDate&sortOrder=descending&max_results=25`);
+    const start = (page - 1) * PAPERS_PER_PAGE;
+    const response = await axios.get(`http://export.arxiv.org/api/query?${query}&sortBy=lastUpdatedDate&sortOrder=descending&start=${start}&max_results=${PAPERS_PER_PAGE}`);
     const xmlData = response.data;
 
     return new Promise((resolve, reject) => {
@@ -90,6 +94,9 @@ export async function GET(request: Request) {
             relatedPapers: [],
             citationCount: metrics.citationCount,
             altmetric: metrics.altmetric,
+            inReadingList: false,
+            userRating: 0,
+            comments: [],
           };
         }));
 

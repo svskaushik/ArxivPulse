@@ -167,7 +167,7 @@ export default function Home() {
             <ul className="space-y-2">
               {papers.map((paper, index) => (
                 <li
-                  key={paper.id}
+                  key={`${paper.id}-${index}`}
                   ref={index === papers.length - 1 ? lastPaperElementRef : null}
                   className="cursor-pointer hover:bg-gray-700 p-2 rounded transition-colors duration-200"
                   onClick={() => handlePaperClick(paper)}
