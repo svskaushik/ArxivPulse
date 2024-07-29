@@ -35,7 +35,8 @@ export enum CitationFormat {
   MLA = 'MLA',
   Chicago = 'Chicago',
   Harvard = 'Harvard',
-  IEEE = 'IEEE'
+  IEEE = 'IEEE',
+  BibTeX = 'BibTeX'
 }
 export interface FilterOptions {
   dateRange: { start: string; end: string };

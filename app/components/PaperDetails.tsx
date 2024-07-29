@@ -1,4 +1,13 @@
 import React from 'react';
+import { motion } from 'framer-motion';
+import { FaCode, FaChartBar, FaBook, FaArrowLeft, FaCalendarAlt } from 'react-icons/fa';
+import Timeline from './Timeline';
+import SocialShareButtons from './SocialShareButtons';
+import { EmbedPDF } from "@simplepdf/react-embed-pdf";
+import ChatWithPDF from './ChatWithPDF';
+import { CitationFormat } from '../types';
+import ReactMarkdown from 'react-markdown';
+import rehypeRaw from 'rehype-raw';
 import { motion, AnimatePresence } from 'framer-motion';
 import ReactMarkdown from 'react-markdown';
 import rehypeRaw from 'rehype-raw';
@@ -23,6 +32,13 @@ const PaperDetails: React.FC<PaperDetailsProps> = ({
   getCitation,
   onBack,
 }) => {
+  const formatDate = (dateString: string) => {
+    return new Date(dateString).toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric'
+    });
+  };
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString('en-US', {
       year: 'numeric',
@@ -121,6 +137,9 @@ const PaperDetails: React.FC<PaperDetailsProps> = ({
           <li className="mr-1">
             <a className="bg-white inline-block py-2 px-4 text-blue-500 hover:text-blue-800 font-semibold" href="#related">Related Papers</a>
           </li>
+          <li className="mr-1">
+            <a className="bg-white inline-block py-2 px-4 text-blue-500 hover:text-blue-800 font-semibold" href="#chat">Chat with PDF</a>
+          </li>
         </ul>
       </div>
       <div id="summary" className="mb-4">
@@ -167,7 +186,11 @@ const PaperDetails: React.FC<PaperDetailsProps> = ({
           </select>
         </div>
         <div className="glass p-2 rounded">
-          <p className="text-gray-300">{getCitation(paper, selectedCitationFormat)}</p>
+          {selectedCitationFormat === CitationFormat.BibTeX ? (
+            <pre className="text-gray-300 whitespace-pre-wrap">{getCitation(paper, selectedCitationFormat)}</pre>
+          ) : (
+            <p className="text-gray-300">{getCitation(paper, selectedCitationFormat)}</p>
+          )}
           <button
             onClick={() => navigator.clipboard.writeText(getCitation(paper, selectedCitationFormat))}
             className="mt-2 glass text-white px-2 py-1 rounded hover:bg-opacity-20 transition-colors"
@@ -205,6 +228,10 @@ const PaperDetails: React.FC<PaperDetailsProps> = ({
             style={{ border: 'none' }}
           />
         </EmbedPDF>
+      </div>
+      <div id="chat" className="mb-4">
+        <h3 className="text-2xl font-semibold mb-2">Chat with PDF</h3>
+        <ChatWithPDF paperId={paper.id} pdfUrl={paper.pdfLink} />
       </div>
     </motion.article>
   );

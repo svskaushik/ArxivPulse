@@ -177,6 +177,15 @@ export default function Home() {
         return `${authors.join(', ')}, ${year}. ${paper.title}. arXiv preprint arXiv:${arxivId}.`;
       case CitationFormat.IEEE:
         return `${authors.map(author => author.split(' ').pop() + ', ' + author.split(' ')[0][0] + '.').join(', ')}, "${paper.title}," arXiv preprint arXiv:${arxivId}, ${year}.`;
+      case CitationFormat.BibTeX:
+        return `@article{${authors[0].split(' ').pop().toLowerCase()}${year},
+  title={${paper.title}},
+  author={${authors.join(' and ')}},
+  year={${year}},
+  eprint={${arxivId}},
+  archivePrefix={arXiv},
+  primaryClass={cs.CL}
+}`;
       default:
         return `${authors.join(', ')} (${year}). ${paper.title}. arXiv preprint arXiv:${arxivId}.`;
     }
