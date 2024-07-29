@@ -6,10 +6,10 @@ import { Paper, CitationFormat, Comment } from './types';
 import NavBar from './components/NavBar';
 import PaperList from './components/PaperList';
 import PaperDetails from './components/PaperDetails';
-import PaperItem from './components/PaperItem';
-import { FaArrowUp } from 'react-icons/fa';
+import { FaArrowUp, FaArrowLeft } from 'react-icons/fa';
 
-const PAPERS_PER_PAGE = 20;
+const INITIAL_PAPERS_COUNT = 15;
+const PAPERS_PER_PAGE = 12;
 
 export default function Home() {
   const [papers, setPapers] = useState<Paper[]>([]);
@@ -36,15 +36,12 @@ export default function Home() {
     if (node) observer.current.observe(node);
   }, [loading, hasMore]);
 
-  useEffect(() => {
-    fetchPapers();
-  }, [page, searchTerm, filterOptions]);
-
   const handleSearch = (term: string) => {
     setSearchTerm(term);
     setPage(1);
     setPapers([]);
     setHasMore(true);
+    fetchInitialPapers();
   };
 
   const handleFilter = (options: any) => {
@@ -52,6 +49,7 @@ export default function Home() {
     setPage(1);
     setPapers([]);
     setHasMore(true);
+    fetchInitialPapers();
   };
 
   const toggleReadingList = (paper: Paper) => {
@@ -89,29 +87,53 @@ export default function Home() {
     );
   };
 
-  const fetchPapers = useCallback(async () => {
-    if (loading || !hasMore) return;
+  useEffect(() => {
+    fetchPapers();
+  }, [page, searchTerm, filterOptions]);
+
+  const fetchInitialPapers = async () => {
     try {
       setLoading(true);
-      const response = await fetch(`/api/fetch-papers?page=${page}&search=${searchTerm}&startDate=${filterOptions.dateRange.start}&endDate=${filterOptions.dateRange.end}&category=${filterOptions.category}`);
+      const response = await fetch(`/api/fetch-papers?page=1&perPage=${INITIAL_PAPERS_COUNT}&search=${searchTerm}&startDate=${filterOptions.dateRange.start}&endDate=${filterOptions.dateRange.end}&category=${filterOptions.category}`);
       if (!response.ok) {
         throw new Error('Network response was not ok');
       }
       const data = await response.json();
       if (Array.isArray(data)) {
-        setPapers(prevPapers => [...prevPapers, ...data]);
-        setHasMore(data.length === PAPERS_PER_PAGE);
+        setPapers(data);
+        setHasMore(data.length === INITIAL_PAPERS_COUNT);
       } else {
         console.error('Unexpected data format:', data);
-        setHasMore(false);
+        setPapers([]);
       }
     } catch (error) {
-      console.error('Error fetching papers:', error);
-      setHasMore(false);
+      console.error('Error fetching initial papers:', error);
+      setPapers([]);
     } finally {
       setLoading(false);
     }
-  }, [page, searchTerm, filterOptions, loading, hasMore]);
+  };
+
+  const fetchPapers = async () => {
+    try {
+      setLoading(true);
+      const response = await fetch(`/api/fetch-papers?page=${page}&perPage=${PAPERS_PER_PAGE}&search=${searchTerm}&startDate=${filterOptions.dateRange.start}&endDate=${filterOptions.dateRange.end}&category=${filterOptions.category}`);
+      if (!response.ok) {
+        throw new Error('Network response was not ok');
+      }
+      const data = await response.json();
+      if (Array.isArray(data)) {
+        setPapers(prevPapers => page === 1 ? data : [...prevPapers, ...data]);
+        setHasMore(data.length === PAPERS_PER_PAGE);
+      } else {
+        console.error('Unexpected data format:', data);
+      }
+    } catch (error) {
+      console.error('Error fetching papers:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handlePaperClick = async (paper: Paper) => {
     setSelectedPaper(paper);
@@ -173,12 +195,12 @@ export default function Home() {
   };
 
   return (
-    <div className="flex flex-col min-h-screen">
+    <div className="flex flex-col h-screen overflow-hidden">
       <NavBar onSearch={handleSearch} onFilter={handleFilter} />
-      <div className="flex flex-grow p-4">
+      <div className="flex flex-grow p-4 h-[calc(100vh-64px)]"> {/* Adjust 64px if your NavBar height is different */}
         {selectedPaper ? (
           <>
-            <div className="w-1/3 pr-4 overflow-y-auto">
+            <div className="w-1/3 pr-4 overflow-y-auto h-full">
               <PaperList
                 papers={papers}
                 selectedPaperId={selectedPaper.id}
@@ -187,7 +209,14 @@ export default function Home() {
               />
               {loading && <p className="mt-4">Loading more papers...</p>}
             </div>
-            <div className="w-2/3 pl-4">
+            <div className="w-2/3 pl-4 overflow-y-auto h-full relative">
+              <button
+                onClick={() => setSelectedPaper(null)}
+                className="absolute top-2 right-2 bg-blue-600 text-white p-2 rounded-full shadow-lg hover:bg-blue-700 transition-colors"
+                aria-label="Return to list"
+              >
+                <FaArrowLeft />
+              </button>
               <PaperDetails
                 paper={selectedPaper}
                 selectedCitationFormat={selectedCitationFormat}
@@ -197,30 +226,25 @@ export default function Home() {
             </div>
           </>
         ) : (
-          <div className="w-full">
+          <div className="w-full overflow-y-auto h-full">
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               {papers.map((paper, index) => (
-                <PaperItem
+                <div
                   key={`${paper.id}-${index}`}
-                  paper={paper}
-                  onClick={handlePaperClick}
-                  isLast={index === papers.length - 1}
-                  lastPaperElementRef={lastPaperElementRef}
-                />
+                  ref={index === papers.length - 1 ? lastPaperElementRef : null}
+                  className="cursor-pointer bg-gray-800 p-4 rounded-lg shadow-md hover:bg-gray-700 transition-colors duration-200"
+                  onClick={() => handlePaperClick(paper)}
+                >
+                  <h3 className="text-lg font-semibold mb-2">{paper.title}</h3>
+                  <p className="text-sm text-gray-400 mb-2">{paper.authors.map(author => author.name).join(', ')}</p>
+                  <p className="text-sm text-gray-500">{paper.abstract.substring(0, 150)}...</p>
+                </div>
               ))}
             </div>
             {loading && <p className="mt-4">Loading papers...</p>}
           </div>
         )}
       </div>
-      {showBackToTop && (
-        <button
-          onClick={scrollToTop}
-          className="fixed bottom-4 right-4 bg-blue-600 text-white p-2 rounded-full shadow-lg hover:bg-blue-700 transition-colors"
-        >
-          <FaArrowUp />
-        </button>
-      )}
     </div>
   );
 }

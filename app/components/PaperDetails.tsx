@@ -123,7 +123,7 @@ const PaperDetails: React.FC<PaperDetailsProps> = ({
               strong: ({node, ...props}) => <strong className="font-bold" {...props} />,
               em: ({node, ...props}) => <em className="italic" {...props} />,
               code: ({node, inline, ...props}) => 
-                inline ? <code className="bg-gray-700 rounded px-1" {...props} /> : <pre className="bg-gray-700 p-2 rounded mb-2"><code {...props} /></pre>,
+                inline ? <code className="bg-gray-700 rounded px-1" {...props} /> : <pre className="bg-gray-700 p-2 rounded mb-2 whitespace-pre-wrap break-words"><code className="break-words" {...props} /></pre>,
             }}>
               {paper.summary}
             </ReactMarkdown>

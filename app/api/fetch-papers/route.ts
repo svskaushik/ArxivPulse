@@ -47,10 +47,13 @@ async function fetchMetrics(arxivId: string, doi: string | null) {
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
   const page = parseInt(searchParams.get('page') || '1', 10);
+  const perPage = parseInt(searchParams.get('perPage') || '10', 10);
   const searchTerm = searchParams.get('search') || '';
   const startDate = searchParams.get('startDate') || '';
   const endDate = searchParams.get('endDate') || '';
   const category = searchParams.get('category') || 'cs.AI';
+
+  console.log(`Fetching papers: page=${page}, perPage=${perPage}`);
 
   try {
     let query = `search_query=${category}`;

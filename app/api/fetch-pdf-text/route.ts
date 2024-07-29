@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import axios from 'axios';
-import * as pdf from 'pdf-parse';
+import pdf from 'pdf-parse';
 
 export async function GET(request: NextRequest) {
   const searchParams = request.nextUrl.searchParams;
