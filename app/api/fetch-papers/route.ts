@@ -3,7 +3,7 @@ import axios from 'axios';
 import { parseString } from 'xml2js';
 import { Paper } from '../../types';
 
-const PAPERS_PER_PAGE = 10;
+const PAPERS_PER_PAGE = 12;
 
 async function fetchRelatedPapers(paperId: string): Promise<Paper[]> {
   const response = await axios.get(`http://export.arxiv.org/api/query?id_list=${paperId}&max_results=5`);
@@ -32,15 +32,17 @@ async function fetchRelatedPapers(paperId: string): Promise<Paper[]> {
 
 async function fetchMetrics(arxivId: string, doi: string | null) {
   try {
-    const response = await fetch(`/api/fetch-metrics?arxivId=${arxivId}&doi=${doi}`);
+    const semanticScholarId = doi ? doi : `arXiv:${arxivId}`;
+    const response = await fetch(`https://api.semanticscholar.org/graph/v1/paper/${semanticScholarId}?fields=citationCount`);
     if (!response.ok) {
-      console.error('Failed to fetch metrics');
-      return { citationCount: 0, altmetric: 0 };
+      console.error('Failed to fetch metrics from Semantic Scholar');
+      return { citationCount: 0 };
     }
-    return response.json();
+    const data = await response.json();
+    return { citationCount: data.citationCount || 0 };
   } catch (error) {
-    console.error('Error fetching metrics:', error);
-    return { citationCount: 0, altmetric: 0 };
+    console.error('Error fetching metrics from Semantic Scholar:', error);
+    return { citationCount: 0 };
   }
 }
 
@@ -51,21 +53,33 @@ export async function GET(request: Request) {
   const searchTerm = searchParams.get('search') || '';
   const startDate = searchParams.get('startDate') || '';
   const endDate = searchParams.get('endDate') || '';
-  const category = searchParams.get('category') || 'cs.AI';
+  const category = searchParams.get('category') || '';
 
-  console.log(`Fetching papers: page=${page}, perPage=${perPage}`);
+  console.log('Search parameters:', {
+    page,
+    perPage,
+    searchTerm,
+    startDate,
+    endDate,
+    category
+  });
 
   try {
-    let query = `search_query=${category}`;
+    let query = `search_query=`;
+    if (category) {
+      query += `(${category})`;
+    }
     if (searchTerm) {
-      query += `+AND+all:${searchTerm}`;
+      query += category ? `+AND+(all:${encodeURIComponent(searchTerm)})` : `(all:${encodeURIComponent(searchTerm)})`;
     }
     if (startDate) {
       query += `+AND+submittedDate:[${startDate}+TO+${endDate || '*'}]`;
     }
 
     const start = (page - 1) * PAPERS_PER_PAGE;
-    const response = await axios.get(`http://export.arxiv.org/api/query?${query}&sortBy=lastUpdatedDate&sortOrder=descending&start=${start}&max_results=${PAPERS_PER_PAGE}`);
+    const apiUrl = `https://export.arxiv.org/api/query?${query}&sortBy=lastUpdatedDate&sortOrder=descending&start=${start}&max_results=${PAPERS_PER_PAGE}`;
+    console.log('API URL:', apiUrl); // Log the API URL for debugging
+    const response = await axios.get(apiUrl);
     const xmlData = response.data;
 
     return new Promise((resolve, reject) => {
@@ -77,7 +91,7 @@ export async function GET(request: Request) {
         const papers = await Promise.all(result.feed.entry.map(async (entry: any) => {
           const paperId = entry.id[0].split('/').pop();
           const doi = entry['arxiv:doi'] ? entry['arxiv:doi'][0] : null;
-          const metrics = await fetchMetrics(paperId, doi);
+          // const metrics = await fetchMetrics(paperId, doi);
 
           return {
             id: entry.id[0],
@@ -94,12 +108,6 @@ export async function GET(request: Request) {
             published: entry.published[0],
             updated: entry.updated[0],
             doi: doi,
-            relatedPapers: [],
-            citationCount: metrics.citationCount,
-            altmetric: metrics.altmetric,
-            inReadingList: false,
-            userRating: 0,
-            comments: [],
           };
         }));
 

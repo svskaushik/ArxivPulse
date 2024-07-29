@@ -1,5 +1,6 @@
 import React from 'react';
-import { FaTwitter, FaFacebook, FaLinkedin } from 'react-icons/fa';
+import { FaTwitter, FaLinkedin } from 'react-icons/fa';
+import { SiMastodon, SiThreads } from 'react-icons/si';
 
 interface SocialShareButtonsProps {
   url: string;
@@ -21,20 +22,28 @@ const SocialShareButtons: React.FC<SocialShareButtonsProps> = ({ url, title }) =
         <FaTwitter size={24} />
       </a>
       <a
-        href={`https://www.facebook.com/sharer/sharer.php?u=${encodedUrl}`}
-        target="_blank"
-        rel="noopener noreferrer"
-        className="text-blue-600 hover:text-blue-800"
-      >
-        <FaFacebook size={24} />
-      </a>
-      <a
         href={`https://www.linkedin.com/shareArticle?url=${encodedUrl}&title=${encodedTitle}`}
         target="_blank"
         rel="noopener noreferrer"
         className="text-blue-700 hover:text-blue-900"
       >
         <FaLinkedin size={24} />
+      </a>
+      <a
+        href={`https://mastodon.social/share?text=${encodedTitle}%20${encodedUrl}`}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="text-purple-500 hover:text-purple-600"
+      >
+        <SiMastodon size={24} />
+      </a>
+      <a
+        href={`https://threads.net/intent/post?text=${encodeURIComponent(title + ' ' + url)}`}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="text-black hover:text-gray-700"
+      >
+        <SiThreads size={24} />
       </a>
     </div>
   );

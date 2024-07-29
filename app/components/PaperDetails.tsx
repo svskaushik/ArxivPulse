@@ -6,7 +6,7 @@ import { Paper, CitationFormat } from '../types';
 import Timeline from './Timeline';
 import SocialShareButtons from './SocialShareButtons';
 import { EmbedPDF } from "@simplepdf/react-embed-pdf";
-import { FaBook, FaCode, FaChartBar, FaCalendarAlt, FaArrowLeft } from 'react-icons/fa';
+import { FaBook, FaCode, FaChartBar, FaCalendarAlt, FaArrowLeft, FaQuoteLeft } from 'react-icons/fa';
 
 interface PaperDetailsProps {
   paper: Paper;
@@ -85,6 +85,10 @@ const PaperDetails: React.FC<PaperDetailsProps> = ({
                 {category}
               </span>
             ))}
+          </p>
+          <p className="mb-2 text-gray-300">
+            <FaQuoteLeft className="inline mr-2" />
+            Citations: {paper.citationCount}
           </p>
         </div>
         <div>
@@ -197,7 +201,7 @@ const PaperDetails: React.FC<PaperDetailsProps> = ({
           <iframe
             src={`/api/paper-pdf?url=${encodeURIComponent(paper.pdfLink)}`}
             width="100%"
-            height="600px"
+            height="800px"
             style={{ border: 'none' }}
           />
         </EmbedPDF>

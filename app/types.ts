@@ -37,3 +37,7 @@ export enum CitationFormat {
   Harvard = 'Harvard',
   IEEE = 'IEEE'
 }
+export interface FilterOptions {
+  dateRange: { start: string; end: string };
+  category: string;
+}

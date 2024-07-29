@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import axios from 'axios';
-import { Paper, CitationFormat, Comment } from './types';
+import { Paper, CitationFormat, Comment, FilterOptions } from './types';
 import NavBar from './components/NavBar';
 import PaperList from './components/PaperList';
 import PaperDetails from './components/PaperDetails';
@@ -19,9 +19,9 @@ export default function Home() {
   const [loading, setLoading] = useState(true);
   const [readingList, setReadingList] = useState<Paper[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
-  const [filterOptions, setFilterOptions] = useState({
+  const [filterOptions, setFilterOptions] = useState<FilterOptions>({
     dateRange: { start: '', end: '' },
-    categories: [],
+    category: '',
   });
   const [page, setPage] = useState(1);
   const [hasMore, setHasMore] = useState(true);
@@ -46,12 +46,12 @@ export default function Home() {
     fetchInitialPapers();
   };
 
-  const handleFilter = (options: any) => {
+  const handleFilter = (options: FilterOptions) => {
     setFilterOptions(options);
     setPage(1);
     setPapers([]);
     setHasMore(true);
-    fetchInitialPapers();
+    fetchPapers(1, options);
   };
 
   const toggleReadingList = (paper: Paper) => {
@@ -90,8 +90,8 @@ export default function Home() {
   };
 
   useEffect(() => {
-    fetchPapers();
-  }, [page, searchTerm, filterOptions]);
+    fetchPapers(1, filterOptions);
+  }, [searchTerm, filterOptions]);
 
   const fetchInitialPapers = async () => {
     try {
@@ -116,17 +116,26 @@ export default function Home() {
     }
   };
 
-  const fetchPapers = async () => {
+  const fetchPapers = async (currentPage: number, currentFilters: FilterOptions) => {
     try {
       setLoading(true);
-      const response = await fetch(`/api/fetch-papers?page=${page}&perPage=${PAPERS_PER_PAGE}&search=${searchTerm}&startDate=${filterOptions.dateRange.start}&endDate=${filterOptions.dateRange.end}&category=${filterOptions.category}`);
+      const queryParams = new URLSearchParams({
+        page: currentPage.toString(),
+        perPage: PAPERS_PER_PAGE.toString(),
+        search: searchTerm,
+        startDate: currentFilters.dateRange.start,
+        endDate: currentFilters.dateRange.end,
+        ...(currentFilters.category && { category: currentFilters.category }),
+      });
+      const response = await fetch(`/api/fetch-papers?${queryParams}`);
       if (!response.ok) {
         throw new Error('Network response was not ok');
       }
       const data = await response.json();
       if (Array.isArray(data)) {
-        setPapers(prevPapers => page === 1 ? data : [...prevPapers, ...data]);
+        setPapers(prevPapers => currentPage === 1 ? data : [...prevPapers, ...data]);
         setHasMore(data.length === PAPERS_PER_PAGE);
+        setPage(currentPage);
       } else {
         console.error('Unexpected data format:', data);
       }
