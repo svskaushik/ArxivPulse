@@ -6,6 +6,7 @@ import { Paper, CitationFormat, Comment } from './types';
 import NavBar from './components/NavBar';
 import PaperList from './components/PaperList';
 import PaperDetails from './components/PaperDetails';
+import PaperItem from './components/PaperItem';
 import { FaArrowUp } from 'react-icons/fa';
 
 const PAPERS_PER_PAGE = 20;
@@ -199,16 +200,13 @@ export default function Home() {
           <div className="w-full">
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               {papers.map((paper, index) => (
-                <div
+                <PaperItem
                   key={`${paper.id}-${index}`}
-                  ref={index === papers.length - 1 ? lastPaperElementRef : null}
-                  className="cursor-pointer bg-gray-800 p-4 rounded-lg shadow-md hover:bg-gray-700 transition-colors duration-200"
-                  onClick={() => handlePaperClick(paper)}
-                >
-                  <h3 className="text-lg font-semibold mb-2">{paper.title}</h3>
-                  <p className="text-sm text-gray-400 mb-2">{paper.authors.map(author => author.name).join(', ')}</p>
-                  <p className="text-sm text-gray-500">{paper.abstract.substring(0, 150)}...</p>
-                </div>
+                  paper={paper}
+                  onClick={handlePaperClick}
+                  isLast={index === papers.length - 1}
+                  lastPaperElementRef={lastPaperElementRef}
+                />
               ))}
             </div>
             {loading && <p className="mt-4">Loading papers...</p>}
