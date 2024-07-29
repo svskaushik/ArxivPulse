@@ -1,11 +1,12 @@
 import React from 'react';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import ReactMarkdown from 'react-markdown';
 import rehypeRaw from 'rehype-raw';
 import { Paper, CitationFormat } from '../types';
 import Timeline from './Timeline';
 import SocialShareButtons from './SocialShareButtons';
 import PdfViewer from './PdfViewer';
+import { FaBook, FaCode, FaChartBar, FaCalendarAlt } from 'react-icons/fa';
 
 interface PaperDetailsProps {
   paper: Paper;
@@ -48,8 +49,138 @@ const PaperDetails: React.FC<PaperDetailsProps> = ({
       transition={{ duration: 0.3 }}
       className="bg-gray-800 rounded-lg shadow-lg p-6"
     >
-      {/* Paper details content */}
-      {/* ... (include all the content from the original file, but replace the hardcoded paper with the prop) */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div>
+          <h2 className="text-3xl font-bold mb-2">{paper.title}</h2>
+          <p className="mb-2 text-gray-300 text-lg">
+            Authors: {paper.authors.map((author, index) => (
+              <span key={index}>
+                <a href={author.profileUrl} target="_blank" rel="noopener noreferrer" className="text-blue-400 hover:underline">
+                  {author.name}
+                </a>
+                {index < paper.authors.length - 1 ? ', ' : ''}
+              </span>
+            ))}
+          </p>
+          <p className="mb-2 text-gray-300">
+            <FaCalendarAlt className="inline mr-2" />
+            Published: {formatDate(paper.published)}
+          </p>
+          <p className="mb-2 text-gray-300">Last Updated: {formatDate(paper.updated)}</p>
+          <p className="mb-2 text-gray-300">
+            Categories: {paper.categories.map((category, index) => (
+              <span key={index} className="inline-flex items-center bg-gray-700 rounded-full px-3 py-1 text-sm font-semibold text-gray-300 mr-2 mb-2">
+                {getCategoryIcon(category)}
+                {category}
+              </span>
+            ))}
+          </p>
+        </div>
+        <div>
+          <Timeline paper={paper} />
+        </div>
+      </div>
+      <div className="mb-4">
+        <a href={paper.link} target="_blank" rel="noopener noreferrer" className="text-blue-400 hover:underline mr-4 transition-colors duration-200">
+          View on arXiv
+        </a>
+        <a href={paper.pdfLink} target="_blank" rel="noopener noreferrer" className="text-blue-400 hover:underline transition-colors duration-200">
+          Download PDF
+        </a>
+      </div>
+      <div className="mb-4">
+        <h3 className="text-xl font-semibold mb-2">Share</h3>
+        <SocialShareButtons url={paper.link} title={paper.title} />
+      </div>
+      <div className="mb-4">
+        <ul className="flex border-b">
+          <li className="-mb-px mr-1">
+            <a className="bg-white inline-block border-l border-t border-r rounded-t py-2 px-4 text-blue-700 font-semibold" href="#summary">Summary</a>
+          </li>
+          <li className="mr-1">
+            <a className="bg-white inline-block py-2 px-4 text-blue-500 hover:text-blue-800 font-semibold" href="#abstract">Abstract</a>
+          </li>
+          <li className="mr-1">
+            <a className="bg-white inline-block py-2 px-4 text-blue-500 hover:text-blue-800 font-semibold" href="#citation">Citation</a>
+          </li>
+          <li className="mr-1">
+            <a className="bg-white inline-block py-2 px-4 text-blue-500 hover:text-blue-800 font-semibold" href="#related">Related Papers</a>
+          </li>
+        </ul>
+      </div>
+      <div id="summary" className="mb-4">
+        <h3 className="text-2xl font-semibold mb-2">Summary</h3>
+        {paper.summary ? (
+          <div className="text-gray-300">
+            <ReactMarkdown rehypePlugins={[rehypeRaw]} components={{
+              p: ({node, ...props}) => <p className="mb-2" {...props} />,
+              h1: ({node, ...props}) => <h1 className="text-2xl font-bold mb-2" {...props} />,
+              h2: ({node, ...props}) => <h2 className="text-xl font-bold mb-2" {...props} />,
+              h3: ({node, ...props}) => <h3 className="text-lg font-bold mb-2" {...props} />,
+              ul: ({node, ...props}) => <ul className="list-disc list-inside mb-2" {...props} />,
+              ol: ({node, ...props}) => <ol className="list-decimal list-inside mb-2" {...props} />,
+              li: ({node, ...props}) => <li className="mb-1" {...props} />,
+              strong: ({node, ...props}) => <strong className="font-bold" {...props} />,
+              em: ({node, ...props}) => <em className="italic" {...props} />,
+              code: ({node, inline, ...props}) => 
+                inline ? <code className="bg-gray-700 rounded px-1" {...props} /> : <pre className="bg-gray-700 p-2 rounded mb-2"><code {...props} /></pre>,
+            }}>
+              {paper.summary}
+            </ReactMarkdown>
+          </div>
+        ) : (
+          <p className="text-gray-400">Generating summary...</p>
+        )}
+      </div>
+      <div id="abstract" className="mb-4">
+        <h3 className="text-2xl font-semibold mb-2">Abstract</h3>
+        <p className="text-gray-300">{paper.abstract}</p>
+      </div>
+      <div id="citation" className="mb-4">
+        <h3 className="text-2xl font-semibold mb-2">Citation</h3>
+        <div className="mb-2">
+          <label htmlFor="citationFormat" className="mr-2">Citation Format:</label>
+          <select
+            id="citationFormat"
+            value={selectedCitationFormat}
+            onChange={(e) => onCitationFormatChange(e.target.value as CitationFormat)}
+            className="bg-gray-700 text-white rounded p-1"
+          >
+            {Object.values(CitationFormat).map((format) => (
+              <option key={format} value={format}>{format}</option>
+            ))}
+          </select>
+        </div>
+        <div className="bg-gray-700 p-2 rounded">
+          <p className="text-gray-300">{getCitation(paper, selectedCitationFormat)}</p>
+          <button
+            onClick={() => navigator.clipboard.writeText(getCitation(paper, selectedCitationFormat))}
+            className="mt-2 bg-blue-600 text-white px-2 py-1 rounded hover:bg-blue-700 transition-colors"
+          >
+            Copy Citation
+          </button>
+        </div>
+      </div>
+      <div id="related" className="mb-4">
+        <h3 className="text-2xl font-semibold mb-2">Related Papers</h3>
+        {paper.relatedPapers.length > 0 ? (
+          <ul className="list-disc list-inside">
+            {paper.relatedPapers.map((relatedPaper, index) => (
+              <li key={index} className="text-gray-300">
+                <a href={relatedPaper.link} target="_blank" rel="noopener noreferrer" className="text-blue-400 hover:underline">
+                  {relatedPaper.title}
+                </a>
+                <p className="text-sm text-gray-400">
+                  {relatedPaper.authors.map(author => author.name).join(', ')}
+                </p>
+              </li>
+            ))}
+          </ul>
+        ) : (
+          <p className="text-gray-400">No related papers found.</p>
+        )}
+      </div>
+      <PdfViewer pdfUrl={paper.pdfLink} />
     </motion.article>
   );
 };
