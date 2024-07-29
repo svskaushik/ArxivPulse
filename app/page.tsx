@@ -2,14 +2,13 @@
 
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import axios from 'axios';
-import ReactMarkdown from 'react-markdown';
 import { Paper, CitationFormat, Comment } from './types';
-import PaperVisualization from './components/PaperVisualization';
-import SocialShareButtons from './components/SocialShareButtons';
 import NavBar from './components/NavBar';
-import PdfViewer from './components/PdfViewer';
+import PaperList from './components/PaperList';
+import PaperDetails from './components/PaperDetails';
+import { FaArrowUp } from 'react-icons/fa';
 
-const PAPERS_PER_PAGE = 10;
+const PAPERS_PER_PAGE = 20;
 
 export default function Home() {
   const [papers, setPapers] = useState<Paper[]>([]);
@@ -25,7 +24,7 @@ export default function Home() {
   const [hasMore, setHasMore] = useState(true);
 
   const observer = useRef<IntersectionObserver | null>(null);
-  const lastPaperElementRef = useCallback((node: HTMLLIElement | null) => {
+  const lastPaperElementRef = useCallback((node: HTMLDivElement | null) => {
     if (loading) return;
     if (observer.current) observer.current.disconnect();
     observer.current = new IntersectionObserver(entries => {
@@ -132,13 +131,6 @@ export default function Home() {
     }
   };
 
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric'
-    });
-  };
 
   const getCitation = (paper: Paper, format: CitationFormat): string => {
     const authors = paper.authors.map(author => author.name);
@@ -163,166 +155,221 @@ export default function Home() {
 
   const [selectedCitationFormat, setSelectedCitationFormat] = useState<CitationFormat>(CitationFormat.APA);
 
+  const [showBackToTop, setShowBackToTop] = useState(false);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      setShowBackToTop(window.scrollY > 300);
+    };
+
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
+  const scrollToTop = () => {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
   return (
     <div className="flex flex-col min-h-screen">
       <NavBar onSearch={handleSearch} onFilter={handleFilter} />
-      <div className="flex flex-col md:flex-row flex-grow">
-        <div className="w-full md:w-1/3 pr-4 overflow-y-auto">
-          {loading && papers.length === 0 ? (
-            <p>Loading papers...</p>
-          ) : (
-            <ul className="space-y-2">
+      <div className="flex flex-grow p-4">
+        {selectedPaper ? (
+          <>
+            <div className="w-1/3 pr-4 overflow-y-auto">
+              <div className="grid grid-cols-1 gap-4">
+                {papers.map((paper, index) => (
+                  <div
+                    key={`${paper.id}-${index}`}
+                    ref={index === papers.length - 1 ? lastPaperElementRef : null}
+                    className={`cursor-pointer p-4 rounded-lg shadow-md transition-colors duration-200 ${paper.id === selectedPaper.id ? 'bg-blue-600' : 'bg-gray-800 hover:bg-gray-700'}`}
+                    onClick={() => handlePaperClick(paper)}
+                  >
+                    <h3 className="text-lg font-semibold mb-2">{paper.title}</h3>
+                    <p className="text-sm text-gray-400 mb-2">{paper.authors.map(author => author.name).join(', ')}</p>
+                    <p className="text-sm text-gray-500">{paper.abstract.substring(0, 100)}...</p>
+                  </div>
+                ))}
+              </div>
+              {loading && <p className="mt-4">Loading more papers...</p>}
+            </div>
+            <div className="w-2/3 pl-4">
+              <motion.article
+                key={selectedPaper.id}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -20 }}
+                transition={{ duration: 0.3 }}
+                className="bg-gray-800 rounded-lg shadow-lg p-6"
+              >
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <h2 className="text-3xl font-bold mb-2">{selectedPaper.title}</h2>
+                    <p className="mb-2 text-gray-300 text-lg">
+                      Authors: {selectedPaper.authors.map((author, index) => (
+                        <span key={index}>
+                          <a href={author.profileUrl} target="_blank" rel="noopener noreferrer" className="text-blue-400 hover:underline">
+                            {author.name}
+                          </a>
+                          {index < selectedPaper.authors.length - 1 ? ', ' : ''}
+                        </span>
+                      ))}
+                    </p>
+                    <p className="mb-2 text-gray-300">
+                      <FaCalendarAlt className="inline mr-2" />
+                      Published: {formatDate(selectedPaper.published)}
+                    </p>
+                    <p className="mb-2 text-gray-300">Last Updated: {formatDate(selectedPaper.updated)}</p>
+                    <p className="mb-2 text-gray-300">
+                      Categories: {selectedPaper.categories.map((category, index) => (
+                        <span key={index} className="inline-flex items-center bg-gray-700 rounded-full px-3 py-1 text-sm font-semibold text-gray-300 mr-2 mb-2">
+                          {getCategoryIcon(category)}
+                          {category}
+                        </span>
+                      ))}
+                    </p>
+                  </div>
+                  <div>
+                    <Timeline paper={selectedPaper} />
+                  </div>
+                </div>
+                <div className="mb-4">
+                  <a href={selectedPaper.link} target="_blank" rel="noopener noreferrer" className="text-blue-400 hover:underline mr-4 transition-colors duration-200">
+                    View on arXiv
+                  </a>
+                  <a href={selectedPaper.pdfLink} target="_blank" rel="noopener noreferrer" className="text-blue-400 hover:underline transition-colors duration-200">
+                    Download PDF
+                  </a>
+                </div>
+                <div className="mb-4">
+                  <h3 className="text-xl font-semibold mb-2">Share</h3>
+                  <SocialShareButtons url={selectedPaper.link} title={selectedPaper.title} />
+                </div>
+                <div className="mb-4">
+                  <ul className="flex border-b">
+                    <li className="-mb-px mr-1">
+                      <a className="bg-white inline-block border-l border-t border-r rounded-t py-2 px-4 text-blue-700 font-semibold" href="#summary">Summary</a>
+                    </li>
+                    <li className="mr-1">
+                      <a className="bg-white inline-block py-2 px-4 text-blue-500 hover:text-blue-800 font-semibold" href="#abstract">Abstract</a>
+                    </li>
+                    <li className="mr-1">
+                      <a className="bg-white inline-block py-2 px-4 text-blue-500 hover:text-blue-800 font-semibold" href="#citation">Citation</a>
+                    </li>
+                    <li className="mr-1">
+                      <a className="bg-white inline-block py-2 px-4 text-blue-500 hover:text-blue-800 font-semibold" href="#related">Related Papers</a>
+                    </li>
+                  </ul>
+                </div>
+                <div id="summary" className="mb-4">
+                  <h3 className="text-2xl font-semibold mb-2">Summary</h3>
+                  {selectedPaper.summary ? (
+                    <div className="text-gray-300">
+                      <ReactMarkdown rehypePlugins={[rehypeRaw]} components={{
+                        p: ({node, ...props}) => <p className="mb-2" {...props} />,
+                        h1: ({node, ...props}) => <h1 className="text-2xl font-bold mb-2" {...props} />,
+                        h2: ({node, ...props}) => <h2 className="text-xl font-bold mb-2" {...props} />,
+                        h3: ({node, ...props}) => <h3 className="text-lg font-bold mb-2" {...props} />,
+                        ul: ({node, ...props}) => <ul className="list-disc list-inside mb-2" {...props} />,
+                        ol: ({node, ...props}) => <ol className="list-decimal list-inside mb-2" {...props} />,
+                        li: ({node, ...props}) => <li className="mb-1" {...props} />,
+                        strong: ({node, ...props}) => <strong className="font-bold" {...props} />,
+                        em: ({node, ...props}) => <em className="italic" {...props} />,
+                        code: ({node, inline, ...props}) => 
+                          inline ? <code className="bg-gray-700 rounded px-1" {...props} /> : <pre className="bg-gray-700 p-2 rounded mb-2"><code {...props} /></pre>,
+                      }}>
+                        {selectedPaper.summary}
+                      </ReactMarkdown>
+                    </div>
+                  ) : (
+                    <p className="text-gray-400">Generating summary...</p>
+                  )}
+                </div>
+                <div id="abstract" className="mb-4">
+                  <h3 className="text-2xl font-semibold mb-2">Abstract</h3>
+                  <p className="text-gray-300">{selectedPaper.abstract}</p>
+                </div>
+                <div id="citation" className="mb-4">
+                  <h3 className="text-2xl font-semibold mb-2">Citation</h3>
+                  <div className="mb-2">
+                    <label htmlFor="citationFormat" className="mr-2">Citation Format:</label>
+                    <select
+                      id="citationFormat"
+                      value={selectedCitationFormat}
+                      onChange={(e) => setSelectedCitationFormat(e.target.value as CitationFormat)}
+                      className="bg-gray-700 text-white rounded p-1"
+                    >
+                      {Object.values(CitationFormat).map((format) => (
+                        <option key={format} value={format}>{format}</option>
+                      ))}
+                    </select>
+                  </div>
+                  <div className="bg-gray-700 p-2 rounded">
+                    <p className="text-gray-300">{getCitation(selectedPaper, selectedCitationFormat)}</p>
+                    <button
+                      onClick={() => navigator.clipboard.writeText(getCitation(selectedPaper, selectedCitationFormat))}
+                      className="mt-2 bg-blue-600 text-white px-2 py-1 rounded hover:bg-blue-700 transition-colors"
+                    >
+                      Copy Citation
+                    </button>
+                  </div>
+                </div>
+                <div id="related" className="mb-4">
+                  <h3 className="text-2xl font-semibold mb-2">Related Papers</h3>
+                  {selectedPaper.relatedPapers.length > 0 ? (
+                    <ul className="list-disc list-inside">
+                      {selectedPaper.relatedPapers.map((paper, index) => (
+                        <li key={index} className="text-gray-300">
+                          <a href={paper.link} target="_blank" rel="noopener noreferrer" className="text-blue-400 hover:underline">
+                            {paper.title}
+                          </a>
+                          <p className="text-sm text-gray-400">
+                            {paper.authors.map(author => author.name).join(', ')}
+                          </p>
+                        </li>
+                      ))}
+                    </ul>
+                  ) : (
+                    <p className="text-gray-400">No related papers found.</p>
+                  )}
+                </div>
+                <PdfViewer pdfUrl={selectedPaper.pdfLink} />
+              </motion.article>
+            ) : (
+              <p className="text-gray-400">Select a paper to view its details</p>
+            )}
+          </AnimatePresence>
+        </div>
+            </div>
+          </>
+        ) : (
+          <div className="w-full">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               {papers.map((paper, index) => (
-                <li
+                <div
                   key={`${paper.id}-${index}`}
                   ref={index === papers.length - 1 ? lastPaperElementRef : null}
-                  className="cursor-pointer hover:bg-gray-700 p-2 rounded transition-colors duration-200"
+                  className="cursor-pointer bg-gray-800 p-4 rounded-lg shadow-md hover:bg-gray-700 transition-colors duration-200"
                   onClick={() => handlePaperClick(paper)}
                 >
-                  {paper.title}
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      toggleReadingList(paper);
-                    }}
-                    className={`ml-2 ${paper.inReadingList ? 'text-yellow-500' : 'text-gray-400'}`}
-                  >
-                    {paper.inReadingList ? '★' : '☆'}
-                  </button>
-                </li>
-              ))}
-            </ul>
-          )}
-          {loading && <p>Loading more papers...</p>}
-        </div>
-        <div className="w-full md:w-2/3 mt-4 md:mt-0">
-          {selectedPaper ? (
-            <article className="card bg-gray-800 rounded-lg shadow-lg p-6">
-              <h2 className="text-2xl font-bold mb-2">{selectedPaper.title}</h2>
-              <p className="mb-2 text-gray-300">
-                Authors: {selectedPaper.authors.map((author, index) => (
-                  <span key={index}>
-                    <a href={author.profileUrl} target="_blank" rel="noopener noreferrer" className="text-blue-400 hover:underline">
-                      {author.name}
-                    </a>
-                    {index < selectedPaper.authors.length - 1 ? ', ' : ''}
-                  </span>
-                ))}
-              </p>
-              <p className="mb-2 text-gray-300">Published: {formatDate(selectedPaper.published)}</p>
-              <p className="mb-2 text-gray-300">Last Updated: {formatDate(selectedPaper.updated)}</p>
-              <p className="mb-2 text-gray-300">Categories: {selectedPaper.categories.join(', ')}</p>
-              <div className="mb-4">
-                <a href={selectedPaper.link} target="_blank" rel="noopener noreferrer" className="text-blue-400 hover:underline mr-4 transition-colors duration-200">
-                  View on arXiv
-                </a>
-                <a href={selectedPaper.pdfLink} target="_blank" rel="noopener noreferrer" className="text-blue-400 hover:underline transition-colors duration-200">
-                  Download PDF
-                </a>
-              </div>
-              <div className="mb-4">
-                <span className="mr-4">Citations: {selectedPaper.citationCount}</span>
-                <span>Altmetric: {selectedPaper.altmetric}</span>
-              </div>
-              <div className="mb-4">
-                <h3 className="text-xl font-semibold mb-2">Share</h3>
-                <SocialShareButtons url={selectedPaper.link} title={selectedPaper.title} />
-              </div>
-              <h3 className="text-xl font-semibold mb-2 mt-4">Abstract</h3>
-              <p className="text-gray-300 mb-4">{selectedPaper.abstract}</p>
-              <h3 className="text-xl font-semibold mb-2">Summary</h3>
-              {selectedPaper.summary ? (
-                <div className="text-gray-300 mb-4">
-                  <ReactMarkdown>{selectedPaper.summary}</ReactMarkdown>
+                  <h3 className="text-lg font-semibold mb-2">{paper.title}</h3>
+                  <p className="text-sm text-gray-400 mb-2">{paper.authors.map(author => author.name).join(', ')}</p>
+                  <p className="text-sm text-gray-500">{paper.abstract.substring(0, 150)}...</p>
                 </div>
-              ) : (
-                <p className="text-gray-400 mb-4">Generating summary...</p>
-              )}
-              <h3 className="text-xl font-semibold mb-2">Citation</h3>
-              <div className="mb-2">
-                <label htmlFor="citationFormat" className="mr-2">Citation Format:</label>
-                <select
-                  id="citationFormat"
-                  value={selectedCitationFormat}
-                  onChange={(e) => setSelectedCitationFormat(e.target.value as CitationFormat)}
-                  className="bg-gray-700 text-white rounded p-1"
-                >
-                  {Object.values(CitationFormat).map((format) => (
-                    <option key={format} value={format}>{format}</option>
-                  ))}
-                </select>
-              </div>
-              <div className="bg-gray-700 p-2 rounded mb-4">
-                <p className="text-gray-300">{getCitation(selectedPaper, selectedCitationFormat)}</p>
-                <button
-                  onClick={() => navigator.clipboard.writeText(getCitation(selectedPaper, selectedCitationFormat))}
-                  className="mt-2 bg-blue-600 text-white px-2 py-1 rounded hover:bg-blue-700 transition-colors"
-                >
-                  Copy Citation
-                </button>
-              </div>
-              <h3 className="text-xl font-semibold mb-2">Related Papers</h3>
-              {selectedPaper.relatedPapers.length > 0 ? (
-                <ul className="list-disc list-inside">
-                  {selectedPaper.relatedPapers.map((paper, index) => (
-                    <li key={index} className="text-gray-300">
-                      <a href={paper.link} target="_blank" rel="noopener noreferrer" className="text-blue-400 hover:underline">
-                        {paper.title}
-                      </a>
-                      <p className="text-sm text-gray-400">
-                        {paper.authors.map(author => author.name).join(', ')}
-                      </p>
-                    </li>
-                  ))}
-                </ul>
-              ) : (
-                <p className="text-gray-400">No related papers found.</p>
-              )}
-              <h3 className="text-xl font-semibold mb-2 mt-4">Rate this paper</h3>
-              <div className="flex mb-4">
-                {[1, 2, 3, 4, 5].map((star) => (
-                  <button
-                    key={star}
-                    onClick={() => ratePaper(selectedPaper, star)}
-                    className={`text-2xl ${selectedPaper.userRating && selectedPaper.userRating >= star ? 'text-yellow-500' : 'text-gray-400'}`}
-                  >
-                    ★
-                  </button>
-                ))}
-              </div>
-              <h3 className="text-xl font-semibold mb-2">Comments</h3>
-              <ul className="mb-4">
-                {selectedPaper.comments && selectedPaper.comments.map((comment) => (
-                  <li key={comment.id} className="mb-2">
-                    <p className="text-gray-300">{comment.text}</p>
-                    <p className="text-sm text-gray-400">{new Date(comment.createdAt).toLocaleString()}</p>
-                  </li>
-                ))}
-              </ul>
-              <form onSubmit={(e) => {
-                e.preventDefault();
-                const comment = (e.target as HTMLFormElement).comment.value;
-                addComment(selectedPaper, comment);
-                (e.target as HTMLFormElement).reset();
-              }}>
-                <textarea name="comment" className="w-full p-2 bg-gray-700 text-white rounded" placeholder="Add a comment..."></textarea>
-                <button type="submit" className="mt-2 bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition-colors">
-                  Add Comment
-                </button>
-              </form>
-              <PdfViewer pdfUrl={selectedPaper.pdfLink} />
-            </article>
-          ) : (
-            <p className="text-gray-400">Select a paper to view its details</p>
-          )}
-          {/* Paper Visualization (hidden for now)
-          <h3 className="text-2xl font-bold mt-8 mb-4">Paper Visualization</h3>
-          <div className="bg-gray-800 p-4 rounded-lg">
-            <PaperVisualization papers={papers} />
+              ))}
+            </div>
+            {loading && <p className="mt-4">Loading papers...</p>}
           </div>
-          */}
-        </div>
+        )}
       </div>
+      {showBackToTop && (
+        <button
+          onClick={scrollToTop}
+          className="fixed bottom-4 right-4 bg-blue-600 text-white p-2 rounded-full shadow-lg hover:bg-blue-700 transition-colors"
+        >
+          <FaArrowUp />
+        </button>
+      )}
     </div>
   );
 }

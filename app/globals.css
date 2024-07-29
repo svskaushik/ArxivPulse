@@ -32,3 +32,47 @@ body {
     text-wrap: balance;
   }
 }
+
+/* Improved typography */
+h1 {
+  @apply text-4xl font-bold mb-4;
+}
+
+h2 {
+  @apply text-3xl font-semibold mb-3;
+}
+
+h3 {
+  @apply text-2xl font-semibold mb-2;
+}
+
+p {
+  @apply text-base mb-2;
+}
+
+/* Styles for tabbed interface */
+.tab-content {
+  @apply hidden;
+}
+
+.tab-content.active {
+  @apply block;
+}
+
+/* Styles for code blocks */
+pre {
+  @apply bg-gray-700 p-4 rounded-lg overflow-x-auto;
+}
+
+code {
+  @apply font-mono text-sm;
+}
+
+/* Styles for hover effect on paper list */
+.paper-item:hover .paper-abstract {
+  @apply block;
+}
+
+.paper-abstract {
+  @apply hidden absolute z-10 bg-gray-800 p-4 rounded shadow-lg max-w-md;
+}
