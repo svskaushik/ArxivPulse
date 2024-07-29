@@ -1,9 +1,9 @@
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import axios from 'axios';
-import pdf from 'pdf-parse';
+import * as pdf from 'pdf-parse';
 
-export async function GET(request: Request) {
-  const { searchParams } = new URL(request.url);
+export async function GET(request: NextRequest) {
+  const searchParams = request.nextUrl.searchParams;
   const pdfUrl = searchParams.get('url');
 
   if (!pdfUrl) {
