@@ -177,31 +177,21 @@ export default function Home() {
         {selectedPaper ? (
           <>
             <div className="w-1/3 pr-4 overflow-y-auto">
-              <div className="grid grid-cols-1 gap-4">
-                {papers.map((paper, index) => (
-                  <div
-                    key={`${paper.id}-${index}`}
-                    ref={index === papers.length - 1 ? lastPaperElementRef : null}
-                    className={`cursor-pointer p-4 rounded-lg shadow-md transition-colors duration-200 ${paper.id === selectedPaper.id ? 'bg-blue-600' : 'bg-gray-800 hover:bg-gray-700'}`}
-                    onClick={() => handlePaperClick(paper)}
-                  >
-                    <h3 className="text-lg font-semibold mb-2">{paper.title}</h3>
-                    <p className="text-sm text-gray-400 mb-2">{paper.authors.map(author => author.name).join(', ')}</p>
-                    <p className="text-sm text-gray-500">{paper.abstract.substring(0, 100)}...</p>
-                  </div>
-                ))}
-              </div>
+              <PaperList
+                papers={papers}
+                selectedPaperId={selectedPaper.id}
+                onPaperClick={handlePaperClick}
+                lastPaperElementRef={lastPaperElementRef}
+              />
               {loading && <p className="mt-4">Loading more papers...</p>}
             </div>
             <div className="w-2/3 pl-4">
-              <motion.article
-                key={selectedPaper.id}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -20 }}
-                transition={{ duration: 0.3 }}
-                className="bg-gray-800 rounded-lg shadow-lg p-6"
-              >
+              <PaperDetails
+                paper={selectedPaper}
+                selectedCitationFormat={selectedCitationFormat}
+                onCitationFormatChange={setSelectedCitationFormat}
+                getCitation={getCitation}
+              />
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
                     <h2 className="text-3xl font-bold mb-2">{selectedPaper.title}</h2>
