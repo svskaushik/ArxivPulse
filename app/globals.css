@@ -6,16 +6,39 @@
   --foreground-rgb: 255, 255, 255;
   --background-start-rgb: 10, 25, 41;
   --background-end-rgb: 2, 12, 27;
+  --glass-bg: rgba(255, 255, 255, 0.1);
+  --glass-border: rgba(255, 255, 255, 0.2);
 }
 
 body {
   color: rgb(var(--foreground-rgb));
   background: linear-gradient(
-      to bottom,
-      transparent,
+      135deg,
+      rgb(var(--background-start-rgb)),
       rgb(var(--background-end-rgb))
-    )
-    rgb(var(--background-start-rgb));
+    );
+  min-height: 100vh;
+}
+
+.glass {
+  background: var(--glass-bg);
+  backdrop-filter: blur(10px);
+  border: 1px solid var(--glass-border);
+  border-radius: 10px;
+  transition: all 0.3s ease;
+}
+
+.glass:hover {
+  background: rgba(255, 255, 255, 0.15);
+  box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
+}
+
+button.glass:hover, a.glass:hover {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+.btn {
+  @apply px-4 py-2 glass text-white rounded hover:bg-opacity-20 transition-colors;
 }
 
 @layer components {

@@ -15,18 +15,18 @@ const PaperItem: React.FC<PaperItemProps> = memo(({ paper, onClick, isLast, last
   return (
     <motion.div
       ref={isLast ? lastPaperElementRef : null}
-      className="cursor-pointer bg-gray-800 p-4 rounded-lg shadow-md transition-colors duration-200 relative"
+      className="cursor-pointer glass p-4 rounded-lg shadow-md transition-all duration-200 relative hover:bg-opacity-20 hover:shadow-lg"
       onClick={() => onClick(paper)}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
-      whileHover={{ backgroundColor: '#4a5568' }}
+      whileHover={{ scale: 1.02 }}
     >
       <h3 className="text-lg font-semibold mb-2">{paper.title}</h3>
       <p className="text-sm text-gray-400 mb-2">{paper.authors.map(author => author.name).join(', ')}</p>
       <p className="text-sm text-gray-500">{paper.abstract.substring(0, 150)}...</p>
       
       {isHovered && (
-        <div className="absolute z-10 bg-gray-900 p-4 rounded-lg shadow-lg left-0 right-0 mt-2">
+        <div className="absolute z-10 glass p-4 rounded-lg shadow-lg left-0 right-0 mt-2">
           <h4 className="text-md font-semibold mb-2">Abstract</h4>
           <p className="text-sm text-gray-300">{paper.abstract}</p>
         </div>

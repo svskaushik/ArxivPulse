@@ -7,14 +7,14 @@ const SkeletonLoader: React.FC = () => {
       {[...Array(6)].map((_, index) => (
         <motion.div
           key={index}
-          className="bg-gray-800 p-4 rounded-lg shadow-md"
+          className="glass p-4 rounded-lg shadow-md"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ duration: 0.5, delay: index * 0.1 }}
         >
-          <div className="h-6 bg-gray-700 rounded mb-2 animate-pulse"></div>
-          <div className="h-4 bg-gray-700 rounded mb-2 w-3/4 animate-pulse"></div>
-          <div className="h-4 bg-gray-700 rounded w-1/2 animate-pulse"></div>
+          <div className="h-6 bg-white bg-opacity-20 rounded mb-2 animate-pulse"></div>
+          <div className="h-4 bg-white bg-opacity-20 rounded mb-2 w-3/4 animate-pulse"></div>
+          <div className="h-4 bg-white bg-opacity-20 rounded w-1/2 animate-pulse"></div>
         </motion.div>
       ))}
     </div>

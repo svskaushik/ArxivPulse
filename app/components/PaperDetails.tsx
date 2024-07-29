@@ -6,7 +6,7 @@ import { Paper, CitationFormat } from '../types';
 import Timeline from './Timeline';
 import SocialShareButtons from './SocialShareButtons';
 import { EmbedPDF } from "@simplepdf/react-embed-pdf";
-import { FaBook, FaCode, FaChartBar, FaCalendarAlt } from 'react-icons/fa';
+import { FaBook, FaCode, FaChartBar, FaCalendarAlt, FaArrowLeft } from 'react-icons/fa';
 
 interface PaperDetailsProps {
   paper: Paper;
@@ -47,9 +47,16 @@ const PaperDetails: React.FC<PaperDetailsProps> = ({
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: -20 }}
       transition={{ duration: 0.3 }}
-      className="bg-gray-800 rounded-lg shadow-lg p-6"
+      className="glass rounded-lg shadow-lg p-6 relative"
     >
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <button
+        onClick={() => window.history.back()}
+        className="absolute top-4 left-4 glass text-white p-2 rounded-full shadow-lg hover:bg-opacity-20 transition-colors"
+        aria-label="Return to list"
+      >
+        <FaArrowLeft />
+      </button>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-8">
         <div>
           <h2 className="text-3xl font-bold mb-2">{paper.title}</h2>
           <p className="mb-2 text-gray-300 text-lg">
@@ -69,7 +76,7 @@ const PaperDetails: React.FC<PaperDetailsProps> = ({
           <p className="mb-2 text-gray-300">Last Updated: {formatDate(paper.updated)}</p>
           <p className="mb-2 text-gray-300">
             Categories: {paper.categories.map((category, index) => (
-              <span key={index} className="inline-flex items-center bg-gray-700 rounded-full px-3 py-1 text-sm font-semibold text-gray-300 mr-2 mb-2">
+              <span key={index} className="inline-flex items-center glass rounded-full px-3 py-1 text-sm font-semibold text-gray-300 mr-2 mb-2">
                 {getCategoryIcon(category)}
                 {category}
               </span>
@@ -144,18 +151,18 @@ const PaperDetails: React.FC<PaperDetailsProps> = ({
             id="citationFormat"
             value={selectedCitationFormat}
             onChange={(e) => onCitationFormatChange(e.target.value as CitationFormat)}
-            className="bg-gray-700 text-white rounded p-1"
+            className="glass text-white rounded p-1"
           >
             {Object.values(CitationFormat).map((format) => (
               <option key={format} value={format}>{format}</option>
             ))}
           </select>
         </div>
-        <div className="bg-gray-700 p-2 rounded">
+        <div className="glass p-2 rounded">
           <p className="text-gray-300">{getCitation(paper, selectedCitationFormat)}</p>
           <button
             onClick={() => navigator.clipboard.writeText(getCitation(paper, selectedCitationFormat))}
-            className="mt-2 bg-blue-600 text-white px-2 py-1 rounded hover:bg-blue-700 transition-colors"
+            className="mt-2 glass text-white px-2 py-1 rounded hover:bg-opacity-20 transition-colors"
           >
             Copy Citation
           </button>
