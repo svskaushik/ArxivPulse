@@ -86,10 +86,10 @@ const PaperDetails: React.FC<PaperDetailsProps> = ({
               </span>
             ))}
           </p>
-          <p className="mb-2 text-gray-300">
+          {/* <p className="mb-2 text-gray-300">
             <FaQuoteLeft className="inline mr-2" />
             Citations: {paper.citationCount}
-          </p>
+          </p> */}
         </div>
         <div>
           <Timeline paper={paper} />
@@ -178,7 +178,7 @@ const PaperDetails: React.FC<PaperDetailsProps> = ({
       </div>
       <div id="related" className="mb-4">
         <h3 className="text-2xl font-semibold mb-2">Related Papers</h3>
-        {paper.relatedPapers.length > 0 ? (
+        {Array.isArray(paper.relatedPapers) && paper.relatedPapers.length > 0 ? (
           <ul className="list-disc list-inside">
             {paper.relatedPapers.map((relatedPaper, index) => (
               <li key={index} className="text-gray-300">
