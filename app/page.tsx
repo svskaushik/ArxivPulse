@@ -115,7 +115,7 @@ export default function Home() {
     setSelectedPaper(paper);
     if (!paper.summary) {
       try {
-        const response = await axios.post<{ summary: string }>('/api/summarize', { text: paper.title });
+        const response = await axios.post<{ summary: string }>('/api/summarize', { text: paper.abstract });
         const updatedPaper = { ...paper, summary: response.data.summary };
         setSelectedPaper(updatedPaper);
         setPapers(prevPapers => prevPapers.map(p => p.id === paper.id ? updatedPaper : p));

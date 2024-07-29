@@ -1,25 +1,41 @@
-import { NextApiRequest, NextApiResponse } from 'next';
-import axios from 'axios';
+import { NextRequest, NextResponse } from 'next/server';
+import { LangflowClient } from '../../utils/langflowClient';
 
-export default async function handler(req: NextApiRequest, res: NextApiResponse) {
-  if (req.method !== 'POST') {
-    return res.status(405).json({ error: 'Method not allowed' });
-  }
+const langflowClient = new LangflowClient(process.env.LANGFLOW_API_URL!, process.env.LANGFLOW_API_KEY);
 
-  const { text } = req.body;
+export async function POST(request: NextRequest) {
+  const { text } = await request.json();
 
   if (!text) {
-    return res.status(400).json({ error: 'Text is required' });
+    return NextResponse.json({ error: 'Text is required' }, { status: 400 });
   }
 
   try {
-    // Replace this with your actual LLM API call
-    const response = await axios.post('https://api.langflow.com/summarize', { text });
-    const summary = response.data.summary;
+    const flowIdOrName = process.env.LANGFLOW_FLOW_ID!;
+    const tweaks = {
+      "GoogleGenerativeAIModel-pBSTc": {},
+      "TextInput-LERC7": {},
+      "TextOutput-U5ntd": {},
+      "Prompt-sXSZz": {}
+    };
 
-    res.status(200).json({ summary });
+    const response = await langflowClient.runFlow(
+      flowIdOrName,
+      text,
+      tweaks,
+      false,
+      (data) => console.log("Received:", data.chunk),
+      (message) => console.log("Stream Closed:", message),
+      (error) => console.log("Stream Error:", error)
+    );
+
+    const flowOutputs = response.outputs[0];
+    const firstComponentOutputs = flowOutputs.outputs[0];
+    const output = firstComponentOutputs.outputs.message;
+
+    return NextResponse.json({ summary: output.message.text });
   } catch (error) {
     console.error('Error generating summary:', error);
-    res.status(500).json({ error: 'Error generating summary' });
+    return NextResponse.json({ error: 'Error generating summary' }, { status: 500 });
   }
 }
