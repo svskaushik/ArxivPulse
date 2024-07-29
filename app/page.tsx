@@ -21,7 +21,6 @@ export default function Home() {
   const [searchTerm, setSearchTerm] = useState('');
   const [filterOptions, setFilterOptions] = useState<FilterOptions>({
     dateRange: { start: '', end: '' },
-    category: '',
   });
   const [page, setPage] = useState(1);
   const [hasMore, setHasMore] = useState(true);
@@ -125,7 +124,6 @@ export default function Home() {
         search: searchTerm,
         startDate: currentFilters.dateRange.start,
         endDate: currentFilters.dateRange.end,
-        ...(currentFilters.category && { category: currentFilters.category }),
       });
       const response = await fetch(`/api/fetch-papers?${queryParams}`);
       if (!response.ok) {

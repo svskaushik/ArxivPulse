@@ -8,37 +8,23 @@ interface FilterOptionsProps {
 
 interface FilterOptions {
   dateRange: { start: string; end: string };
-  category: string;
 }
-
-const categoryOptions = [
-  { value: 'cs.AI', label: 'Artificial Intelligence' },
-  { value: 'cs.CL', label: 'Computation and Language' },
-  { value: 'cs.CV', label: 'Computer Vision' },
-  { value: 'cs.LG', label: 'Machine Learning' },
-  { value: 'cs.NE', label: 'Neural and Evolutionary Computing' },
-];
 
 const FilterOptions: React.FC<FilterOptionsProps> = ({ onFilter, activeFilters }) => {
   const [dateRange, setDateRange] = useState(activeFilters.dateRange);
-  const [selectedCategory, setSelectedCategory] = useState(
-    categoryOptions.find(option => option.value === activeFilters.category) || null
-  );
 
   useEffect(() => {
     handleFilter();
-  }, [dateRange, selectedCategories]);
+  }, [dateRange]);
 
   const handleFilter = () => {
     onFilter({
       dateRange,
-      category: selectedCategory ? selectedCategory.value : '',
     });
   };
 
   const handleClearFilters = () => {
     setDateRange({ start: '', end: '' });
-    setSelectedCategories([]);
   };
 
   return (
@@ -60,26 +46,15 @@ const FilterOptions: React.FC<FilterOptionsProps> = ({ onFilter, activeFilters }
           />
         </div>
       </div>
-      <div className="mb-4">
-        <label className="block text-gray-300 mb-2">Category:</label>
-        <Select
-          options={categoryOptions}
-          value={selectedCategory}
-          onChange={(selected) => setSelectedCategory(selected as any)}
-          className="text-black"
-          classNamePrefix="select"
-          isClearable
-        />
-      </div>
       <div className="flex justify-between items-center">
         <button
           onClick={handleClearFilters}
           className="glass text-white px-4 py-2 rounded hover:bg-opacity-20 transition-colors"
         >
-          Clear All Filters
+          Clear Date Filter
         </button>
         <span className="text-gray-300">
-          Active Filters: {(selectedCategory ? 1 : 0) + (dateRange.start || dateRange.end ? 1 : 0)}
+          Active Filters: {(dateRange.start || dateRange.end ? 1 : 0)}
         </span>
       </div>
     </div>

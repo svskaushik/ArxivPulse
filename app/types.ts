@@ -39,5 +39,4 @@ export enum CitationFormat {
 }
 export interface FilterOptions {
   dateRange: { start: string; end: string };
-  category: string;
 }

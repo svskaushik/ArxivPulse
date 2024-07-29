@@ -53,31 +53,27 @@ export async function GET(request: Request) {
   const searchTerm = searchParams.get('search') || '';
   const startDate = searchParams.get('startDate') || '';
   const endDate = searchParams.get('endDate') || '';
-  const category = searchParams.get('category') || '';
-
   console.log('Search parameters:', {
     page,
     perPage,
     searchTerm,
     startDate,
-    endDate,
-    category
+    endDate
   });
 
   try {
-    let query = `search_query=`;
-    if (category) {
-      query += `(${category})`;
-    }
+    let queryParts = [];
+    
     if (searchTerm) {
-      query += category ? `+AND+(all:${encodeURIComponent(searchTerm)})` : `(all:${encodeURIComponent(searchTerm)})`;
+      queryParts.push(`all:${encodeURIComponent(searchTerm)}`);
     }
     if (startDate) {
-      query += `+AND+submittedDate:[${startDate}+TO+${endDate || '*'}]`;
+      queryParts.push(`submittedDate:[${startDate} TO ${endDate || '*'}]`);
     }
 
+    const query = queryParts.length > 0 ? queryParts.join('+AND+') : 'all';
     const start = (page - 1) * PAPERS_PER_PAGE;
-    const apiUrl = `https://export.arxiv.org/api/query?${query}&sortBy=lastUpdatedDate&sortOrder=descending&start=${start}&max_results=${PAPERS_PER_PAGE}`;
+    const apiUrl = `https://export.arxiv.org/api/query?search_query=${query}&sortBy=lastUpdatedDate&sortOrder=descending&start=${start}&max_results=${PAPERS_PER_PAGE}`;
     console.log('API URL:', apiUrl); // Log the API URL for debugging
     const response = await axios.get(apiUrl);
     const xmlData = response.data;
@@ -88,30 +84,41 @@ export async function GET(request: Request) {
           reject(new Error('Error parsing XML'));
         }
 
-        const papers = await Promise.all(result.feed.entry.map(async (entry: any) => {
-          const paperId = entry.id[0].split('/').pop();
-          const doi = entry['arxiv:doi'] ? entry['arxiv:doi'][0] : null;
-          // const metrics = await fetchMetrics(paperId, doi);
+        if (!result || !result.feed || !result.feed.entry) {
+          console.error('Unexpected API response structure:', result);
+          resolve(NextResponse.json({ error: 'Unexpected API response structure' }, { status: 500 }));
+          return;
+        }
 
-          return {
-            id: entry.id[0],
-            title: entry.title[0],
-            authors: entry.author.map((author: any) => ({
-              name: author.name[0],
-              profileUrl: `https://arxiv.org/search/cs?searchtype=author&query=${encodeURIComponent(author.name[0])}`,
-            })),
-            link: entry.link.find((link: any) => link.$.rel === 'alternate')?.$.href,
-            pdfLink: `https://arxiv.org/pdf/${paperId}.pdf`,
-            summary: '',
-            abstract: entry.summary[0],
-            categories: entry.category.map((cat: any) => cat.$.term),
-            published: entry.published[0],
-            updated: entry.updated[0],
-            doi: doi,
-          };
-        }));
+        try {
+          const papers = await Promise.all(result.feed.entry.map(async (entry: any) => {
+            const paperId = entry.id[0].split('/').pop();
+            const doi = entry['arxiv:doi'] ? entry['arxiv:doi'][0] : null;
+            // const metrics = await fetchMetrics(paperId, doi);
 
-        resolve(NextResponse.json(papers));
+            return {
+              id: entry.id[0],
+              title: entry.title[0],
+              authors: entry.author.map((author: any) => ({
+                name: author.name[0],
+                profileUrl: `https://arxiv.org/search/cs?searchtype=author&query=${encodeURIComponent(author.name[0])}`,
+              })),
+              link: entry.link.find((link: any) => link.$.rel === 'alternate')?.$.href,
+              pdfLink: `https://arxiv.org/pdf/${paperId}.pdf`,
+              summary: '',
+              abstract: entry.summary[0],
+              categories: Array.isArray(entry.category) ? entry.category.map((cat: any) => cat.$.term) : [],
+              published: entry.published[0],
+              updated: entry.updated[0],
+              doi: doi,
+            };
+          }));
+
+          resolve(NextResponse.json(papers));
+        } catch (error) {
+          console.error('Error processing API response:', error);
+          resolve(NextResponse.json({ error: 'Error processing API response' }, { status: 500 }));
+        }
       });
     });
   } catch (error) {
