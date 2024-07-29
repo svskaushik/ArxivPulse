@@ -6,7 +6,9 @@ import { Paper, CitationFormat, Comment } from './types';
 import NavBar from './components/NavBar';
 import PaperList from './components/PaperList';
 import PaperDetails from './components/PaperDetails';
+import SkeletonLoader from './components/SkeletonLoader';
 import { FaArrowUp, FaArrowLeft } from 'react-icons/fa';
+import { motion, AnimatePresence } from 'framer-motion';
 
 const INITIAL_PAPERS_COUNT = 15;
 const PAPERS_PER_PAGE = 12;
@@ -194,52 +196,66 @@ export default function Home() {
     <div className="flex flex-col h-screen overflow-hidden">
       <NavBar onSearch={handleSearch} onFilter={handleFilter} />
       <div className="flex flex-grow p-4 h-[calc(100vh-64px)]"> {/* Adjust 64px if your NavBar height is different */}
-        {selectedPaper ? (
-          <>
-            <div className="w-1/3 pr-4 overflow-y-auto h-full">
-              <PaperList
-                papers={papers}
-                selectedPaperId={selectedPaper.id}
-                onPaperClick={handlePaperClick}
-                lastPaperElementRef={lastPaperElementRef}
-              />
-              {loading && <p className="mt-4">Loading more papers...</p>}
-            </div>
-            <div className="w-2/3 pl-4 overflow-y-auto h-full relative">
-              <button
-                onClick={() => setSelectedPaper(null)}
-                className="absolute top-2 right-2 bg-blue-600 text-white p-2 rounded-full shadow-lg hover:bg-blue-700 transition-colors"
-                aria-label="Return to list"
-              >
-                <FaArrowLeft />
-              </button>
-              <PaperDetails
-                paper={selectedPaper}
-                selectedCitationFormat={selectedCitationFormat}
-                onCitationFormatChange={setSelectedCitationFormat}
-                getCitation={getCitation}
-              />
-            </div>
-          </>
-        ) : (
-          <div className="w-full overflow-y-auto h-full">
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {papers.map((paper, index) => (
-                <div
-                  key={`${paper.id}-${index}`}
-                  ref={index === papers.length - 1 ? lastPaperElementRef : null}
-                  className="cursor-pointer bg-gray-800 p-4 rounded-lg shadow-md hover:bg-gray-700 transition-colors duration-200"
-                  onClick={() => handlePaperClick(paper)}
+        <AnimatePresence mode="wait">
+          {selectedPaper ? (
+            <motion.div
+              key="paper-details"
+              className="flex w-full"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.3 }}
+            >
+              <div className="w-1/3 pr-4 overflow-y-auto h-full">
+                <PaperList
+                  papers={papers}
+                  selectedPaperId={selectedPaper.id}
+                  onPaperClick={handlePaperClick}
+                  lastPaperElementRef={lastPaperElementRef}
+                  isDetailView={true}
+                />
+                {loading && <p className="mt-4">Loading more papers...</p>}
+              </div>
+              <div className="w-2/3 pl-4 overflow-y-auto h-full relative">
+                <button
+                  onClick={() => setSelectedPaper(null)}
+                  className="absolute top-2 right-2 bg-blue-600 text-white p-2 rounded-full shadow-lg hover:bg-blue-700 transition-colors"
+                  aria-label="Return to list"
                 >
-                  <h3 className="text-lg font-semibold mb-2">{paper.title}</h3>
-                  <p className="text-sm text-gray-400 mb-2">{paper.authors.map(author => author.name).join(', ')}</p>
-                  <p className="text-sm text-gray-500">{paper.abstract.substring(0, 150)}...</p>
-                </div>
-              ))}
-            </div>
-            {loading && <p className="mt-4">Loading papers...</p>}
-          </div>
-        )}
+                  <FaArrowLeft />
+                </button>
+                <PaperDetails
+                  paper={selectedPaper}
+                  selectedCitationFormat={selectedCitationFormat}
+                  onCitationFormatChange={setSelectedCitationFormat}
+                  getCitation={getCitation}
+                />
+              </div>
+            </motion.div>
+          ) : (
+            <motion.div
+              key="paper-list"
+              className="w-full overflow-y-auto h-full"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.3 }}
+            >
+              {loading && papers.length === 0 ? (
+                <SkeletonLoader />
+              ) : (
+                <PaperList
+                  papers={papers}
+                  selectedPaperId={null}
+                  onPaperClick={handlePaperClick}
+                  lastPaperElementRef={lastPaperElementRef}
+                  isDetailView={false}
+                />
+              )}
+              {loading && papers.length > 0 && <p className="mt-4">Loading more papers...</p>}
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
     </div>
   );
