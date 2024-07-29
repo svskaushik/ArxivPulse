@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import axios from 'axios';
+import ReactMarkdown from 'react-markdown';
 import { Paper, CitationFormat, Comment } from './types';
 import PaperVisualization from './components/PaperVisualization';
 import SocialShareButtons from './components/SocialShareButtons';
@@ -231,7 +232,9 @@ export default function Home() {
               <p className="text-gray-300 mb-4">{selectedPaper.abstract}</p>
               <h3 className="text-xl font-semibold mb-2">Summary</h3>
               {selectedPaper.summary ? (
-                <p className="text-gray-300 mb-4">{selectedPaper.summary}</p>
+                <div className="text-gray-300 mb-4">
+                  <ReactMarkdown>{selectedPaper.summary}</ReactMarkdown>
+                </div>
               ) : (
                 <p className="text-gray-400 mb-4">Generating summary...</p>
               )}
