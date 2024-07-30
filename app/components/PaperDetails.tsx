@@ -113,7 +113,7 @@ const PaperDetails: React.FC<PaperDetailsProps> = ({
       </div>
       <div className="mb-4">
         <ul className="flex border-b">
-          {['summary', 'abstract', 'citation', 'related', 'PDF', 'chat'].map((tab) => (
+          {['summary', 'abstract', 'citation', 'related', 'pdf', 'chat'].map((tab) => (
             <li key={tab} className="-mb-px mr-1">
               <button
                 className={`inline-block py-2 px-4 font-semibold ${

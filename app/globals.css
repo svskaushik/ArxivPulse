@@ -10,6 +10,14 @@
   --glass-border: rgba(255, 255, 255, 0.2);
 }
 
+.dark-mode {
+  --foreground-rgb: 255, 255, 255;
+  --background-start-rgb: 0, 0, 0;
+  --background-end-rgb: 10, 10, 10;
+  --glass-bg: rgba(0, 0, 0, 0.3);
+  --glass-border: rgba(255, 255, 255, 0.1);
+}
+
 body {
   color: rgb(var(--foreground-rgb));
   background: linear-gradient(

@@ -29,7 +29,7 @@ export async function POST(request: NextRequest) {
       (error) => console.log("Stream Error:", error)
     );
 
-    console.log('Full response:', JSON.stringify(response, null, 2));
+    // console.log('Full response:', JSON.stringify(response, null, 2));
 
     let output: string | undefined;
 
